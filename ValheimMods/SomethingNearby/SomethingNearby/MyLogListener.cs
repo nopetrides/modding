@@ -35,9 +35,9 @@ namespace SomethingNearby
         private const string LogQuerySpawned = "Spawned ";
         private const string DungeonMessaage = "A Dungeon is nearby";
         private const string SpawnMessage_En = "{0} {1} appeared nearby";
-        private const string MultiSpawnMessage_En = "{0} {1}s appeared nearby";
         /// <summary>
         /// Check a log, and see if we want that info
+        /// TODO move this somewhere else
         /// </summary>
         private bool ContainsSoughtInfo(string log, out string message)
         {
@@ -63,14 +63,7 @@ namespace SomethingNearby
                 int numberStart = log.LastIndexOf(" ") + 1;
                 string mobCount = log.Substring(numberStart).Trim('\r', '\n');
                 string formattingString;
-                if (mobCount == "1")
-                {
-                    formattingString = SpawnMessage_En;
-                }
-                else
-                {
-                    formattingString = MultiSpawnMessage_En;
-                }
+                formattingString = SpawnMessage_En;                
                 message = string.Format(formattingString, mobCount, mobName);
                 return true;
             }

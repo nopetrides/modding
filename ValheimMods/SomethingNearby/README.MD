@@ -1,4 +1,4 @@
-This is my first mod! It is a simple mod that scraps the console logs and looks for messages like "Deer spawned" or "Dungeon Loaded" and then places a message within the in-game UI for you to be notified.
+This is my first mod! It is a simple mod that scrapes the console logs and looks for messages like "Deer spawned" or "Dungeon Loaded" and then places a message within the in-game UI for you to be notified.
 Uses BepInEx and Jotunn.
 
 Configurables:

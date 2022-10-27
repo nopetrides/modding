@@ -1,6 +1,7 @@
-#SomethingNearby v 0.5
+SomethingNearby v 0.5
 
 This is my first mod! It is a simple mod that scrapes the console logs and looks for messages like "Deer spawned" or "Dungeon Loaded" and then places a message within the in-game UI for you to be notified.
+
 Uses BepInEx and Jotunn.
 
 Configurables:

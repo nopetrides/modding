@@ -10,6 +10,7 @@ using HarmonyLib;
 using Jotunn.Configs;
 using Jotunn.Entities;
 using Jotunn.Managers;
+using MonoMod.RuntimeDetour;
 using System.Reflection;
 using UnityEngine;
 
@@ -24,25 +25,32 @@ namespace CropUtils
 
         public const string PluginGUID = "com.jotunn.CropUtils";
         public const string PluginName = "CropUtils";
-        public const string PluginVersion = "0.0.1";
+        public const string PluginVersion = "0.0.2";
 
+        // Configurable range
         private ConfigEntry<float> m_utilRange;
         public float UtilRange => m_utilRange.Value;
-
-        private ConfigEntry<bool> m_visualRangeIndicator;
-
+        // Render the visual indicator or not
+        private ConfigEntry<bool> m_showVisualRangeIndicator;
+        public bool ShowVisualRangeIndicator => m_showVisualRangeIndicator.Value;
 
         // Variable button backed by a KeyCode and a GamepadButton config
         // No idea what good gamepad buttons are
+        private ConfigEntry<InputManager.GamepadButton> m_increaseRangeControllerButton;
+        private ConfigEntry<KeyCode> m_increaseRangeHotKey;
+        public ButtonConfig IncreaseRangeButton;
+
+        private ConfigEntry<InputManager.GamepadButton> m_decreaseRangeControllerButton;
+        private ConfigEntry<KeyCode> m_decreaseRangeHotKey;
+        public ButtonConfig DecreaseRangeButton;
+
         private ConfigEntry<InputManager.GamepadButton> m_utilControllerButton;
         private ConfigEntry<KeyCode> m_utilHotKey;
         public ButtonConfig UtilButton;
 
-        // No idea what good gamepad buttons are
         private ConfigEntry<InputManager.GamepadButton> m_ignoreTypeControllerButton;
         private ConfigEntry<KeyCode> m_ignoreTypeHotKey;
         public ButtonConfig IgnoreTypeButton;
-
 
 
         private void Awake()
@@ -73,82 +81,109 @@ namespace CropUtils
         {
             Config.SaveOnConfigSet = true;
 
-            // Add an alternative Gamepad button for the Utility Hot Key
+            // Add a configrable range. This will maybe use the admin only control setting instead?
+            // new ConfigurationManagerAttributes { IsAdminOnly = true }
+            m_utilRange = Config.Bind("Util Range",
+                "UtilRangeConfig",
+                20f,
+                new ConfigDescription(
+                    "The distance (in Unity Units) to perform operations out to. Larger numbers may hinder performance.",
+                    new AcceptableValueRange<float>(0.0f, 50.0f)));
+
+            m_showVisualRangeIndicator = Config.Bind("Util Range",
+                "ShouldShowRangeIndicator",
+                true,
+                new ConfigDescription("Should the range be shown when holding down the util key"));
+
+            // Add a Gamepad button for the Hot Key
+            m_increaseRangeControllerButton = Config.Bind("Util Range",
+                "Increase Range Key Gamepad",
+                InputManager.GamepadButton.LeftShoulder,
+                new ConfigDescription("Gamepad button to increase the range of picking while holding the Utiity Key."));
+            // Also add a client side custom input key for the Hot Key
+            m_increaseRangeHotKey = Config.Bind("Utils Keys",
+                "Increase Range Hot Key",
+                KeyCode.RightBracket,
+                new ConfigDescription("Key to increase the range of picking while holding the Utiity Key."));
+
+            m_decreaseRangeControllerButton = Config.Bind("Util Range",
+                "Decrease Range Key Gamepad",
+                InputManager.GamepadButton.RightShoulder,
+                new ConfigDescription("Gamepad button to decrease the range of picking while holding the Utiity Key."));
+            m_decreaseRangeHotKey = Config.Bind("Util Keys",
+                "Decrease Range Hot Key",
+                KeyCode.LeftBracket,
+                new ConfigDescription("Key to decrease the range of pickingwhile holding the Utiity Key."));
+
             m_utilControllerButton = Config.Bind("Util Keys", 
                 "Utility Key Gamepad", 
                 InputManager.GamepadButton.ButtonSouth,
                 new ConfigDescription("Button to enable farming utility helpers when planting or picking"));
-            // Also  Add a client side custom input key for the Utility Hot Key
             m_utilHotKey = Config.Bind("Utils Keys", 
                 "Utility Hot Key", 
                 KeyCode.LeftAlt,
                 new ConfigDescription("Key to enable farming utility helpers when planting or picking"));
 
-            // Add an alternative Gamepad button for the Utility Hot Key
             m_ignoreTypeControllerButton = Config.Bind("Util Keys", 
                 "Ignore Type Key Gamepad", 
-                InputManager.GamepadButton.RightShoulder,
+                InputManager.GamepadButton.ButtonWest,
                 new ConfigDescription("Button to enable farming utility helpers when planting or picking"));
-            // Also  Add a client side custom input key for the Utility Hot Key
             m_ignoreTypeHotKey = Config.Bind("Util Keys", 
                 "Ignore Type Hot Key", 
                 KeyCode.LeftControl, 
                 new ConfigDescription("Key to enable farming utility helpers when planting or picking"));
 
-            // Add a configrable range. This will maybe use the admin only control setting instead?
-            // new ConfigurationManagerAttributes { IsAdminOnly = true }
-            m_utilRange = Config.Bind("Util Range", 
-                "UtilRangeConfig", 
-                20f, 
-                new ConfigDescription(
-                    "The distance (in Unity Units) to perform operations out to. Larger numbers may hinder performance.", 
-                    new AcceptableValueRange<float>(0f, 100f)));
+            
         }
 
         private void AddInputBindings()
         {
             // Add key bindings backed by a config value
             // Also adds the alternative Config for the gamepad button
-            // The HintToken is used for the custom KeyHint of the EvilSword
+            IncreaseRangeButton = new ButtonConfig
+            {
+                Name = "IncreaseRangeButton",
+                GamepadConfig = m_increaseRangeControllerButton, // Gamepad input
+                Config = m_increaseRangeHotKey,        // Keyboard input
+                HintToken = "$increase_range_button",        // Displayed KeyHint
+                BlockOtherInputs = false   // Blocks all other input for this Key / Button
+            };
+            InputManager.Instance.AddButton(PluginGUID, IncreaseRangeButton);
+
+            DecreaseRangeButton = new ButtonConfig
+            {
+                Name = "DecreaseRangeButton",
+                GamepadConfig = m_decreaseRangeControllerButton, // Gamepad input
+                Config = m_decreaseRangeHotKey,        // Keyboard input
+                HintToken = "$decrease_range_button",
+                BlockOtherInputs = false
+            };
+            InputManager.Instance.AddButton(PluginGUID, DecreaseRangeButton);
+
             UtilButton = new ButtonConfig
             {
                 Name = "UtilButton",
                 GamepadConfig = m_utilControllerButton, // Gamepad input
                 Config = m_utilHotKey,        // Keyboard input
-                HintToken = "$util_button",        // Displayed KeyHint
-                BlockOtherInputs = false   // Blocks all other input for this Key / Button
+                HintToken = "$util_button",
+                BlockOtherInputs = false
             };
             InputManager.Instance.AddButton(PluginGUID, UtilButton);
 
-            // Add key bindings backed by a config value
-            // Also adds the alternative Config for the gamepad button
-            // The HintToken is used for the custom KeyHint of the EvilSword
             IgnoreTypeButton = new ButtonConfig
             {
                 Name = "IgnoreTypeButton",
                 GamepadConfig = m_ignoreTypeControllerButton, // Gamepad input
                 Config = m_ignoreTypeHotKey,        // Keyboard input
-                HintToken = "$ignore_type_button",        // Displayed KeyHint
-                BlockOtherInputs = false   // Blocks all other input for this Key / Button
+                HintToken = "$ignore_type_button",
+                BlockOtherInputs = true
             };
             InputManager.Instance.AddButton(PluginGUID, IgnoreTypeButton);
         }
 
-        private void Update()
+        public void ChangeRange(float rangeChange)
         {
-            if (ZInput.instance != null)
-            {
-                if (UtilButton == null || !ZInput.GetButton(UtilButton.Name))
-                {
-                    if (m_visualRangeIndicator.Value)
-                    {
-                        
-                    }
-                    
-
-                    // Allow Range to be changed with scroll wheel (while active)
-                }
-            }
+            m_utilRange.Value += rangeChange;
         }
     }
 }

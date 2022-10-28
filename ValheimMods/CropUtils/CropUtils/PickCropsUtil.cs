@@ -27,12 +27,12 @@ namespace CropUtils
             {
                 return;
             }
-            Interactable ComponentInParent = go.GetComponentInParent<Interactable>();
+            Interactable componentInParent = go.GetComponentInParent<Interactable>();
             
             // Pickable types like crops
-            PickableCheck(__instance, go, alt, ComponentInParent);
+            PickableCheck(__instance, go, alt, componentInParent);
             // Other interactable, namely beehives
-            BeehiveCheck(__instance, go, alt, ComponentInParent);
+            BeehiveCheck(__instance, go, alt, componentInParent);
         }
 
         private static void PickableCheck(Player __instance, GameObject go, bool alt, Interactable ComponentInParent)

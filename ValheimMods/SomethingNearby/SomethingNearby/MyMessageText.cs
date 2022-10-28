@@ -30,6 +30,8 @@ namespace SomethingNearby
             textComponent.fontSize = fontSize;
             textComponent.alignment = TextAnchor.MiddleRight;
             textComponent.raycastTarget = false;
+            gameObject.AddComponent<Outline>();
+            gameObject.AddComponent<Shadow>();
         }
 
 

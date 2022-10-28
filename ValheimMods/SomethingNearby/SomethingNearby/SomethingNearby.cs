@@ -154,7 +154,7 @@ namespace SomethingNearby
             go = Instantiate(go);
             GUIInstance = go.AddComponent<MyMessageText>();
             GUIInstance.Initialize(
-                GUIManager.CustomGUIFront.transform,
+                GUIManager.CustomGUIBack.transform,
                 _anchorMin.Value, _anchorMax.Value,
                 GUIManager.Instance.AveriaSerifBold, GUIManager.Instance.ValheimOrange,
                 _fontSize.Value);

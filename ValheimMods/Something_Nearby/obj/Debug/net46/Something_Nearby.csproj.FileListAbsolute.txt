@@ -1,0 +1,17 @@
+D:\Programming\modding\ValheimMods\Something_Nearby\obj\Debug\net46\Something_Nearby.csproj.AssemblyReference.cache
+D:\Programming\modding\ValheimMods\Something_Nearby\obj\Debug\net46\PluginInfo.cs
+D:\Programming\modding\ValheimMods\Something_Nearby\obj\Debug\net46\Something_Nearby.GeneratedMSBuildEditorConfig.editorconfig
+D:\Programming\modding\ValheimMods\Something_Nearby\obj\Debug\net46\Something_Nearby.AssemblyInfoInputs.cache
+D:\Programming\modding\ValheimMods\Something_Nearby\obj\Debug\net46\Something_Nearby.AssemblyInfo.cs
+D:\Programming\modding\ValheimMods\Something_Nearby\obj\Debug\net46\Something_Nearby.csproj.CoreCompileInputs.cache
+D:\Programming\modding\ValheimMods\Something_Nearby\bin\Debug\net46\Something_Nearby.dll
+D:\Programming\modding\ValheimMods\Something_Nearby\bin\Debug\net46\Something_Nearby.pdb
+D:\Programming\modding\ValheimMods\Something_Nearby\bin\Debug\net46\assembly_guiutils_publicized.dll
+D:\Programming\modding\ValheimMods\Something_Nearby\bin\Debug\net46\assembly_utils_publicized.dll
+D:\Programming\modding\ValheimMods\Something_Nearby\bin\Debug\net46\assembly_valheim_publicized.dll
+D:\Programming\modding\ValheimMods\Something_Nearby\bin\Debug\net46\NPR_Valheim_ModUtils.dll
+D:\Programming\modding\ValheimMods\Something_Nearby\bin\Debug\net46\UnityEngine.UI.dll
+D:\Programming\modding\ValheimMods\Something_Nearby\bin\Debug\net46\NPR_Valheim_ModUtils.pdb
+D:\Programming\modding\ValheimMods\Something_Nearby\obj\Debug\net46\Something_Nearby.csproj.CopyComplete
+D:\Programming\modding\ValheimMods\Something_Nearby\obj\Debug\net46\Something_Nearby.dll
+D:\Programming\modding\ValheimMods\Something_Nearby\obj\Debug\net46\Something_Nearby.pdb

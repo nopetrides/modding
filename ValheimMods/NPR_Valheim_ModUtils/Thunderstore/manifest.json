@@ -1,0 +1,9 @@
+{
+    "name": "NoPetRides_ModUtils",
+    "version_number": "1.0.0",
+    "website_url": "https://github.com/nopetrides/modding/tree/main/ValheimMods/NPR_Valheim_ModUtils",
+    "description": "This is a mod utility library that is a lightweight collection of  some of my own and Jotunn lib based functionality.",
+    "dependencies": [
+        "denikson-BepInExPack_Valheim-5.4.1901"
+    ]
+}

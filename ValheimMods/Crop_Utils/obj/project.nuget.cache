@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "dgSpecHash": "gGsr8XkOttjbt6E1bQlW486a+ZWhX2OhFylmbuAANhc2hVvCYRCfQ1P+Xt3QL0oYQEJLGaHIVExsXhIm9okkdg==",
+  "success": true,
+  "projectFilePath": "D:\\Programming\\modding\\ValheimMods\\Crop_Utils\\Crop_Utils.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\nopet\\.nuget\\packages\\bepinex.analyzers\\1.0.8\\bepinex.analyzers.1.0.8.nupkg.sha512",
+    "C:\\Users\\nopet\\.nuget\\packages\\bepinex.baselib\\5.4.20\\bepinex.baselib.5.4.20.nupkg.sha512",
+    "C:\\Users\\nopet\\.nuget\\packages\\bepinex.core\\5.4.21\\bepinex.core.5.4.21.nupkg.sha512",
+    "C:\\Users\\nopet\\.nuget\\packages\\bepinex.plugininfoprops\\1.1.0\\bepinex.plugininfoprops.1.1.0.nupkg.sha512",
+    "C:\\Users\\nopet\\.nuget\\packages\\harmonyx\\2.7.0\\harmonyx.2.7.0.nupkg.sha512",
+    "C:\\Users\\nopet\\.nuget\\packages\\microsoft.netframework.referenceassemblies\\1.0.2\\microsoft.netframework.referenceassemblies.1.0.2.nupkg.sha512",
+    "C:\\Users\\nopet\\.nuget\\packages\\microsoft.netframework.referenceassemblies.net46\\1.0.2\\microsoft.netframework.referenceassemblies.net46.1.0.2.nupkg.sha512",
+    "C:\\Users\\nopet\\.nuget\\packages\\mono.cecil\\0.11.4\\mono.cecil.0.11.4.nupkg.sha512",
+    "C:\\Users\\nopet\\.nuget\\packages\\monomod.runtimedetour\\21.12.13.1\\monomod.runtimedetour.21.12.13.1.nupkg.sha512",
+    "C:\\Users\\nopet\\.nuget\\packages\\monomod.utils\\21.12.13.1\\monomod.utils.21.12.13.1.nupkg.sha512",
+    "C:\\Users\\nopet\\.nuget\\packages\\unityengine.modules\\2020.3.33\\unityengine.modules.2020.3.33.nupkg.sha512"
+  ],
+  "logs": []
+}

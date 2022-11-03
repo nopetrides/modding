@@ -1,0 +1,16 @@
+D:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\Crop_Utils.dll
+D:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\Crop_Utils.pdb
+D:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\assembly_guiutils_publicized.dll
+D:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\assembly_valheim_publicized.dll
+D:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\NPR_Valheim_ModUtils.dll
+D:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\UnityEngine.UI.dll
+D:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\NPR_Valheim_ModUtils.pdb
+D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.csproj.AssemblyReference.cache
+D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\PluginInfo.cs
+D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.GeneratedMSBuildEditorConfig.editorconfig
+D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.AssemblyInfoInputs.cache
+D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.AssemblyInfo.cs
+D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.csproj.CoreCompileInputs.cache
+D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.csproj.CopyComplete
+D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.dll
+D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.pdb

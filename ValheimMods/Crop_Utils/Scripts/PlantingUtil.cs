@@ -90,9 +90,102 @@ namespace Crop_Utils
         /// <returns></returns>
         private static List<Vector3> BuildPlantingPositions(Vector3 originPos, Plant toPlant, Quaternion rotation)
         {
+            if (Input.GetKey(CropUtils.Instance.IgnoreTypeControllerButton.MainKey) ||
+                Input.GetKey(CropUtils.Instance.IgnoreTypeHotKey.MainKey))
+            {
+                return HexPlantPositions(originPos, toPlant, rotation);
+            }
+            else
+            {
+                return LinePlantPositions(originPos, toPlant, rotation);
+            }
+        }
+        /// <summary>
+        /// Uses hex grid / circle packing to build a set of positions
+        /// </summary>
+        /// <param name="originPos"></param>
+        /// <param name="toPlant"></param>
+        /// <param name="rotation"></param>
+        /// <returns></returns>
+        private static List<Vector3> HexPlantPositions(Vector3 originPos, Plant toPlant, Quaternion rotation)
+        {
+            float growthDiameter = toPlant.m_growRadius * 2f;
+            Vector3 arcDegrees = new Vector3(0,60.0f,0);
+            Quaternion rotPerArc = Quaternion.Euler(arcDegrees);
+            Quaternion currentRotation = rotation;
+            //int iterations = 6;
+            int maxDistanceFromOrigin = Mathf.CeilToInt(CropUtils.Instance.UtilRange / growthDiameter);
+            Debug.Assert(maxDistanceFromOrigin > 0);
+            List<Vector3> hexes = new List<Vector3>();
+            //List<Vector3> newRowPositions = new List<Vector3>();
+            Vector3 currentPos = originPos;
+
+            // 1, 6, 12, 18 . i*6
+            for (int i = 1; i < maxDistanceFromOrigin; i++)
+            {
+                // Move origin to next row
+                // TODO rotate and rotate back
+
+                // create the row
+                int numberOfHexesInRow = i * 6;
+                for (int hexDrawIndex = 0; hexDrawIndex < numberOfHexesInRow; hexDrawIndex++)
+                {
+                    Vector3 distanceBetween = currentRotation * Vector3.forward * growthDiameter;
+                    for (int j = 0; j < i; j++)
+                    {
+                        // place
+                        Vector3 nextPosition = currentPos + distanceBetween;
+                        hexes.Add(nextPosition);
+                    }
+                    // rotate to the next side
+                    currentRotation *= rotPerArc;
+                }
+            }
+
+            /*
+            for (int i = 1; i < maxDistanceFromOrigin; i++)
+            {
+                Vector3[] previousRowPositions = new Vector3 [newRowPositions.Count];
+                newRowPositions.CopyTo(previousRowPositions);
+                newRowPositions.Clear();
+                foreach (Vector3 pos in previousRowPositions)
+                {
+                    for (int k = 0; k < iterations; k++)
+                    {
+                        currentRotation *= rotPerArc;
+                        Vector3 distanceBetween = currentRotation * Vector3.forward * growthDiameter;
+                        Vector3 nextPosition = pos + distanceBetween;
+                        if (!hexes.ContainsKey(nextPosition))
+                        {
+                            hexes.Add(nextPosition, i);
+                            newRowPositions.Add(nextPosition);
+                        }
+                    }                    
+                }
+                CropUtils.Log.LogInfo($"Row created count: {newRowPositions.Count}");
+            }
+            CropUtils.Log.LogInfo($"Total hexes created: {hexes.Keys.Count()} with {maxDistanceFromOrigin} rows");
+            int expectedHexes = (3 * (int)Mathf.Pow(maxDistanceFromOrigin, 2)) - (3 * maxDistanceFromOrigin);
+            if (hexes.Keys.Count() != expectedHexes)
+            {
+                CropUtils.Log.LogWarning($"Number of ghosts {hexes.Keys.Count()} does not match expected hex grid count {expectedHexes}");
+            }*/
+            return hexes.Keys.ToList();
+        }
+
+
+        /// <summary>
+        /// Creates a list of positions for planting out in a row from the origin
+        /// </summary>
+        /// <param name="originPos"></param>
+        /// <param name="toPlant"></param>
+        /// <param name="rotation"></param>
+        /// <returns></returns>
+        private static List<Vector3> LinePlantPositions(Vector3 originPos, Plant toPlant, Quaternion rotation)
+        {
             float growthDiameter = toPlant.m_growRadius * 2f;
 
-            int expectedQuantityOfGhosts = Mathf.FloorToInt(CropUtils.Instance.UtilRange / growthDiameter);
+            int expectedQuantityOfGhosts = Mathf.CeilToInt(CropUtils.Instance.UtilRange / growthDiameter);
 
             List<Vector3> positionList = new List<Vector3>(expectedQuantityOfGhosts);
 
@@ -175,7 +268,7 @@ namespace Crop_Utils
             float staminaCost = __instance.GetStamina();
             ItemDrop.ItemData itemData = __instance.GetRightItem();
             List<Vector3> list = BuildPlantingPositions(gameObject.transform.position, plantComponent, gameObject.transform.rotation);
-            for (int i = 0; i < _placementGhosts.Length; i++)
+            for (int i = 0; i < _placementGhosts.Length && i < list.Count; i++)
             {
                 Vector3 ghostPosition = list[i];
                 if (gameObject.transform.position == ghostPosition)
@@ -221,7 +314,14 @@ namespace Crop_Utils
         /// <returns></returns>
         private static bool DidGhostsBuild(Player player, Plant toPlant)
         {
-            int expectedQuantityOfGhosts = Mathf.CeilToInt(CropUtils.Instance.UtilRange / (toPlant.m_growRadius * 2f));
+            int expectedQuantityOfGhosts;
+            expectedQuantityOfGhosts = Mathf.CeilToInt(CropUtils.Instance.UtilRange / (toPlant.m_growRadius * 2f));
+            if (Input.GetKey(CropUtils.Instance.IgnoreTypeControllerButton.MainKey) ||
+                Input.GetKey(CropUtils.Instance.IgnoreTypeHotKey.MainKey))
+            {
+                expectedQuantityOfGhosts = 3 * (int)Mathf.Pow(expectedQuantityOfGhosts, 2) - 3 * expectedQuantityOfGhosts;
+            }
+
             if (!_placementGhosts[0] || _placementGhosts.Length != expectedQuantityOfGhosts)
             {
                 DestroyGhosts();

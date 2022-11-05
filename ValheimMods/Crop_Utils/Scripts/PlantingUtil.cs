@@ -109,68 +109,104 @@ namespace Crop_Utils
         /// <returns></returns>
         private static List<Vector3> HexPlantPositions(Vector3 originPos, Plant toPlant, Quaternion rotation)
         {
-            float growthDiameter = toPlant.m_growRadius * 2f;
-            Vector3 arcDegrees = new Vector3(0,60.0f,0);
-            Quaternion rotPerArc = Quaternion.Euler(arcDegrees);
-            Quaternion currentRotation = rotation;
-            //int iterations = 6;
-            int maxDistanceFromOrigin = Mathf.CeilToInt(CropUtils.Instance.UtilRange / growthDiameter);
-            Debug.Assert(maxDistanceFromOrigin > 0);
-            List<Vector3> hexes = new List<Vector3>();
-            //List<Vector3> newRowPositions = new List<Vector3>();
-            Vector3 currentPos = originPos;
+            Vector3 arcDegrees = new Vector3(0, 60.0f, 0);
 
-            // 1, 6, 12, 18 . i*6
+            int maxDistanceFromOrigin = Mathf.CeilToInt(CropUtils.Instance.UtilRange / (toPlant.m_growRadius));
+
+
+
+
+
+
+            List<Vector3> hexes = new List<Vector3>();
+            Vector3 distanceBetween = rotation * Vector3.forward * toPlant.m_growRadius;
+            Vector3 firstInRow = originPos + distanceBetween;
+            Vector3 euler = rotation.eulerAngles;
+
             for (int i = 1; i < maxDistanceFromOrigin; i++)
             {
-                // Move origin to next row
-                // TODO rotate and rotate back
+                firstInRow.y = ZoneSystem.instance.GetGroundHeight(firstInRow);
 
-                // create the row
-                int numberOfHexesInRow = i * 6;
+                hexes.Add(firstInRow); // starting point for the next row
+
+                Vector3 posInRow = firstInRow;
+                for (int j = 1; j < maxDistanceFromOrigin * 6; j++)
+                {
+                    int numPerAngle = maxDistanceFromOrigin;
+                    for (int k =0; k < numPerAngle; k++)
+                    {
+                        Vector3 nextHex = Quaternion.Euler(euler) * Vector3.forward * toPlant.m_growRadius;
+                        posInRow += nextHex;
+                        posInRow.y = ZoneSystem.instance.GetGroundHeight(posInRow);
+                        hexes.Add(posInRow);
+                    }
+                    euler += (arcDegrees * j);                                      
+                }
+
+                firstInRow += distanceBetween;  // Vector3.forward * growthDiameter;
+
+               /* int numberOfHexesInRow = i * 6;
+
                 for (int hexDrawIndex = 0; hexDrawIndex < numberOfHexesInRow; hexDrawIndex++)
                 {
-                    Vector3 distanceBetween = currentRotation * Vector3.forward * growthDiameter;
-                    for (int j = 0; j < i; j++)
-                    {
-                        // place
-                        Vector3 nextPosition = currentPos + distanceBetween;
-                        hexes.Add(nextPosition);
-                    }
-                    // rotate to the next side
-                    currentRotation *= rotPerArc;
-                }
+                    // where in the hex is it creating the tile, is it a edge or is a flat
+
+                    // create next hex
+                }*/
             }
 
-            /*
-            for (int i = 1; i < maxDistanceFromOrigin; i++)
+/*
+                // 1, 6, 12, 18 . i*6
+                for (int i = 1; i <= maxDistanceFromOrigin; i++)
             {
-                Vector3[] previousRowPositions = new Vector3 [newRowPositions.Count];
-                newRowPositions.CopyTo(previousRowPositions);
-                newRowPositions.Clear();
-                foreach (Vector3 pos in previousRowPositions)
+                // Move origin to next row
+                Vector3 rotationVector = currentRotation * Vector3.forward;
+                currentPos += rotationVector;
+                currentPos += currentPos * growthDiameter;
+                currentPos -= rotationVector * 2;
+                hexes.Add(currentPos);
+
+                // the rest of the row
+                int numberOfHexesInRow = i * 6;
+                int numberOfHexesPerSide = i;
+                int sideCount = 1;
+                for (int hexDrawIndex = 0; hexDrawIndex < numberOfHexesInRow; hexDrawIndex++)
                 {
-                    for (int k = 0; k < iterations; k++)
+                    Vector3 distanceBetween = Vector3.forward * growthDiameter;
+
+                    if (sideCount < numberOfHexesPerSide)
                     {
+                        // place
+                        currentPos += distanceBetween;
+                        currentPos.y = ZoneSystem.instance.GetGroundHeight(currentPos);
+                        hexes.Add(currentPos);
+                        sideCount++;
+                    }
+                    if (sideCount >= numberOfHexesPerSide)
+                    {
+                        // rotate to the next side
                         currentRotation *= rotPerArc;
-                        Vector3 distanceBetween = currentRotation * Vector3.forward * growthDiameter;
-                        Vector3 nextPosition = pos + distanceBetween;
-                        if (!hexes.ContainsKey(nextPosition))
-                        {
-                            hexes.Add(nextPosition, i);
-                            newRowPositions.Add(nextPosition);
-                        }
-                    }                    
+                        currentPos += currentRotation * Vector3.forward;
+                        sideCount = 0;
+                    }
                 }
-                CropUtils.Log.LogInfo($"Row created count: {newRowPositions.Count}");
-            }
-            CropUtils.Log.LogInfo($"Total hexes created: {hexes.Keys.Count()} with {maxDistanceFromOrigin} rows");
-            int expectedHexes = (3 * (int)Mathf.Pow(maxDistanceFromOrigin, 2)) - (3 * maxDistanceFromOrigin);
-            if (hexes.Keys.Count() != expectedHexes)
-            {
-                CropUtils.Log.LogWarning($"Number of ghosts {hexes.Keys.Count()} does not match expected hex grid count {expectedHexes}");
             }*/
-            return hexes.Keys.ToList();
+
+            CropUtils.Log.LogInfo($"Total hexes created: {hexes.Count()} with {maxDistanceFromOrigin} rows"); 
+            int expectedQuantityOfGhosts;
+            expectedQuantityOfGhosts = Mathf.CeilToInt(CropUtils.Instance.UtilRange / (toPlant.m_growRadius * 2f));
+            int expectedHexes = 3 * (int)Mathf.Pow(expectedQuantityOfGhosts, 2) - (3 * expectedQuantityOfGhosts);
+            if (hexes.Count() != expectedHexes)
+            {
+                CropUtils.Log.LogWarning($"Number of ghosts {hexes.Count()} does not match expected hex grid count {expectedHexes}");
+            }
+            string locations = "Locations: ";
+            foreach (var l in hexes)
+            {
+                locations += $"({l.x}, {l.y}, {l.z})";
+            }
+            CropUtils.Log.LogInfo(locations);
+            return hexes;
         }
 
 
@@ -244,11 +280,13 @@ namespace Crop_Utils
                 return;
             }
             // Allow for distance adjustment while in this mode
-            if (Input.GetKey(CropUtils.Instance.IncreaseRangeControllerButton.MainKey) || Input.GetKey(CropUtils.Instance.IncreaseRangeHotKey.MainKey))
+            if (Input.GetKeyDown(CropUtils.Instance.IncreaseRangeControllerButton.MainKey) || 
+                Input.GetKeyDown(CropUtils.Instance.IncreaseRangeHotKey.MainKey))
             {
                 CropUtils.Instance.ChangeRange(1);
             }
-            if (Input.GetKey(CropUtils.Instance.DecreaseRangeControllerButton.MainKey) || Input.GetKey(CropUtils.Instance.DecreaseRangeHotKey.MainKey))
+            if (Input.GetKeyDown(CropUtils.Instance.DecreaseRangeControllerButton.MainKey) || 
+                Input.GetKeyDown(CropUtils.Instance.DecreaseRangeHotKey.MainKey))
             {
                 CropUtils.Instance.ChangeRange(-1);
             }
@@ -268,7 +306,9 @@ namespace Crop_Utils
             float staminaCost = __instance.GetStamina();
             ItemDrop.ItemData itemData = __instance.GetRightItem();
             List<Vector3> list = BuildPlantingPositions(gameObject.transform.position, plantComponent, gameObject.transform.rotation);
-            for (int i = 0; i < _placementGhosts.Length && i < list.Count; i++)
+
+            CropUtils.Log.LogInfo($"Placing {_placementGhosts.Length} to {list.Count} positions");
+            for (int i = 0; i < _placementGhosts.Length; i++)
             {
                 Vector3 ghostPosition = list[i];
                 if (gameObject.transform.position == ghostPosition)
@@ -316,10 +356,21 @@ namespace Crop_Utils
         {
             int expectedQuantityOfGhosts;
             expectedQuantityOfGhosts = Mathf.CeilToInt(CropUtils.Instance.UtilRange / (toPlant.m_growRadius * 2f));
+            
             if (Input.GetKey(CropUtils.Instance.IgnoreTypeControllerButton.MainKey) ||
                 Input.GetKey(CropUtils.Instance.IgnoreTypeHotKey.MainKey))
             {
-                expectedQuantityOfGhosts = 3 * (int)Mathf.Pow(expectedQuantityOfGhosts, 2) - 3 * expectedQuantityOfGhosts;
+                expectedQuantityOfGhosts++;
+                expectedQuantityOfGhosts = 3 * (int)Mathf.Pow(expectedQuantityOfGhosts, 2) - (3 * expectedQuantityOfGhosts);
+            }
+            if (expectedQuantityOfGhosts == 0)
+            {
+                CropUtils.Log.LogError("Math is wrong, no ghosts to build");
+                return false;
+            }
+            else
+            {
+                CropUtils.Log.LogInfo($"Building {expectedQuantityOfGhosts} ghosts");
             }
 
             if (!_placementGhosts[0] || _placementGhosts.Length != expectedQuantityOfGhosts)
@@ -329,6 +380,7 @@ namespace Crop_Utils
                 {
                     _placementGhosts = new GameObject[expectedQuantityOfGhosts];
                 }
+                CropUtils.Log.LogInfo($"Built {_placementGhosts} ghosts");
                 PieceTable pieceTable = _buildPiecesField.GetValue(player) as PieceTable;
                 if (pieceTable != null)
                 {

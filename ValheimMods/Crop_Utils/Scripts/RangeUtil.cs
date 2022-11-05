@@ -41,11 +41,11 @@ namespace Crop_Utils
                         }
                     }
                     // Allow Range to be changed with keys (while active)
-                    if (Input.GetKey(CropUtils.Instance.IncreaseRangeControllerButton.MainKey) || Input.GetKey(CropUtils.Instance.IncreaseRangeHotKey.MainKey))
+                    if (Input.GetKeyDown(CropUtils.Instance.IncreaseRangeControllerButton.MainKey) || Input.GetKey(CropUtils.Instance.IncreaseRangeHotKey.MainKey))
                     {
                         CropUtils.Instance.ChangeRange(1);
                     }
-                    if (Input.GetKey(CropUtils.Instance.DecreaseRangeControllerButton.MainKey) || Input.GetKey(CropUtils.Instance.DecreaseRangeHotKey.MainKey))
+                    if (Input.GetKeyDown(CropUtils.Instance.DecreaseRangeControllerButton.MainKey) || Input.GetKey(CropUtils.Instance.DecreaseRangeHotKey.MainKey))
                     {
                         CropUtils.Instance.ChangeRange(-1);
                     }

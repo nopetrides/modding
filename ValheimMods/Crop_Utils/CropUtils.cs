@@ -24,6 +24,10 @@ namespace Crop_Utils
         // Configurable range
         private ConfigEntry<int> m_utilRange;
         public int UtilRange => m_utilRange.Value;
+
+        private ConfigEntry<int> m_staminaDiscount;
+        public int StaminaDiscount => m_staminaDiscount.Value;
+
         // Render the visual indicator or not
         private ConfigEntry<bool> m_showVisualRangeIndicator;
         public bool ShowVisualRangeIndicator => m_showVisualRangeIndicator.Value;
@@ -84,6 +88,11 @@ namespace Crop_Utils
                 new ConfigDescription(
                     "The distance (in Unity Units) to perform operations out to. Larger numbers may hinder performance.",
                     new AcceptableValueRange<int>(1, 50)));
+
+            m_staminaDiscount = Config.Bind("Stamina Discount",
+                "StaminaDiscountConfig",
+                20,
+                new ConfigDescription("The divider for how much less stamina planting uses when using the util (stamina cost / 20) default"));
 
             m_showVisualRangeIndicator = Config.Bind("Util Range",
                 "ShouldShowRangeIndicator",

@@ -1,18 +1,23 @@
 ﻿using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Crop_Utils
-{
+{   
+    /// <summary>
+    /// Class for managing range system.
+    /// Range is only shown for pickup functionality, because the range value is shown via ghosts when planting
+    /// </summary>
     [HarmonyPatch]
     public static class InteractRangeUtil
     {
         public static GameObject m_rangeIndicator = null;
 
+        /// <summary>
+        /// When the player hovers over a interactable game objects
+        /// </summary>
+        /// <param name="__instance"></param>
+        /// <param name="hover"></param>
+        /// <param name="hoverCreature"></param>
         [HarmonyPatch(typeof(Player), "FindHoverObject")]
         public static void Postfix(Player __instance, ref GameObject hover, ref GameObject hoverCreature)
         {
@@ -26,7 +31,7 @@ namespace Crop_Utils
                     {
                         if (m_rangeIndicator == null)
                         {
-                            CropUtils.Log.LogInfo("Creating range indicator");
+                            //CropUtils.Log.LogInfo("Creating range indicator");
                             CreateDebugRenderer();
                         }
                         if (hover != null)
@@ -57,11 +62,13 @@ namespace Crop_Utils
             }
         }
 
-
+        /// <summary>
+        /// Creates the renderer used to show the debug range.
+        /// </summary>
         private static void CreateDebugRenderer()
         {
             m_rangeIndicator = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            m_rangeIndicator.GetComponent<SphereCollider>().enabled = false; // should be safe
+            m_rangeIndicator.GetComponent<SphereCollider>().enabled = false; // Don't use this sphere for physics
             var mat = new Material(Shader.Find("UI/Unlit/Transparent"));
             var c = Color.blue;
             c.a = 0.05f;

@@ -7,7 +7,10 @@ using UnityEngine;
 
 namespace Crop_Utils
 {
-
+    /// <summary>
+    /// This is the core class for the Crop Util mod.
+    /// Created by NoPetRides for Valheim
+    /// </summary>
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     [BepInProcess(VALHEIM_EXE_NAME)]
     [BepInDependency("com.nopetrides.valheim.mod-utils")]
@@ -25,8 +28,8 @@ namespace Crop_Utils
         private ConfigEntry<int> m_utilRange;
         public int UtilRange => m_utilRange.Value;
 
-        private ConfigEntry<int> m_staminaDiscount;
-        public int StaminaDiscount => m_staminaDiscount.Value;
+        private ConfigEntry<int> m_cropUtilDiscount;
+        public int Discount => m_cropUtilDiscount.Value;
 
         // Render the visual indicator or not
         private ConfigEntry<bool> m_showVisualRangeIndicator;
@@ -49,13 +52,16 @@ namespace Crop_Utils
         private ConfigEntry<KeyboardShortcut> m_utilHotKey;
         public KeyboardShortcut UtilHotKey => m_utilHotKey.Value;
 
-        private ConfigEntry<KeyboardShortcut> m_ignoreTypeControllerButton;
-        public KeyboardShortcut IgnoreTypeControllerButton => m_ignoreTypeControllerButton.Value;
-        private ConfigEntry<KeyboardShortcut> m_ignoreTypeHotKey;
-        public KeyboardShortcut IgnoreTypeHotKey => m_ignoreTypeHotKey.Value;
+        private ConfigEntry<KeyboardShortcut> m_utilAltControllerButton;
+        public KeyboardShortcut UtilAltControllerButton => m_utilAltControllerButton.Value;
+        private ConfigEntry<KeyboardShortcut> m_utilAltHotKey;
+        public KeyboardShortcut UtilAltHotKey => m_utilAltHotKey.Value;
 
         internal static ManualLogSource Log;
 
+        /// <summary>
+        /// Called by unity on all monobehaviours after creation
+        /// </summary>
         private void Awake()
         {
             if (Instance != null)
@@ -76,6 +82,11 @@ namespace Crop_Utils
             Log.LogInfo("CropUtils successfully patched in");
         }
 
+        /// <summary>
+        /// Generate the config file variables
+        /// If not yet made, uses defaults
+        /// Else, load any saved config value
+        /// </summary>
         private void CreateConfigs()
         {
             Config.SaveOnConfigSet = true;
@@ -88,11 +99,6 @@ namespace Crop_Utils
                 new ConfigDescription(
                     "The distance (in Unity Units) to perform operations out to. Larger numbers may hinder performance.",
                     new AcceptableValueRange<int>(1, 50)));
-
-            m_staminaDiscount = Config.Bind("Stamina Discount",
-                "StaminaDiscountConfig",
-                20,
-                new ConfigDescription("The divider for how much less stamina planting uses when using the util (stamina cost / 20) default"));
 
             m_showVisualRangeIndicator = Config.Bind("Util Range",
                 "ShouldShowRangeIndicator",
@@ -122,24 +128,31 @@ namespace Crop_Utils
             m_utilControllerButton = Config.Bind("Util Keys",
                 "Utility Key Gamepad",
                new KeyboardShortcut(KeyCode.JoystickButton5, new KeyCode[0]),
-                new ConfigDescription("Button to enable farming utility helpers when planting or picking"));
+                new ConfigDescription("Button to enable farming utility helpers when planting or picking. Default behavior is pickup only this type and place in a line"));
             m_utilHotKey = Config.Bind("Utils Keys",
                 "Utility Hot Key",
                 new KeyboardShortcut(KeyCode.LeftAlt, new KeyCode[0]),
-                new ConfigDescription("Key to enable farming utility helpers when planting or picking"));
+                new ConfigDescription("Key to enable farming utility helpers when planting or picking. Default behavior is pickup only this type and place in a line"));
 
-            m_ignoreTypeControllerButton = Config.Bind("Util Keys",
+            m_utilAltControllerButton = Config.Bind("Util Keys",
                 "Ignore Type Key Gamepad",
                 new KeyboardShortcut(KeyCode.JoystickButton4, new KeyCode[0]),
-                new ConfigDescription("Button to enable farming utility helpers when planting or picking"));
-            m_ignoreTypeHotKey = Config.Bind("Util Keys",
-                "Ignore Type Hot Key",
+                new ConfigDescription("Button to enable farming utility helpers when planting or picking. Should pick any type of crop or use the radius placement for crops."));
+            m_utilAltHotKey = Config.Bind("Util Keys",
+                "Utlity Alternative Hot Key",
                 new KeyboardShortcut(KeyCode.Z, new KeyCode[0]),
-                new ConfigDescription("Key to enable farming utility helpers when planting or picking"));
+                new ConfigDescription("Key to enable farming utility helpers when planting or picking. Should pick any type of crop or use the radius placement for crops."));
 
-
+            m_cropUtilDiscount = Config.Bind("Stamina & Tool Durability Discount",
+               "StaminaDiscountConfig",
+               20,
+               new ConfigDescription("The divider for how much less stamina planting uses when using the util (stamina cost / 20) default"));
         }
 
+        /// <summary>
+        /// Public method to change the range of the utilities
+        /// </summary>
+        /// <param name="rangeChange"></param>
         public void ChangeRange(int rangeChange)
         {
             m_utilRange.Value += rangeChange;

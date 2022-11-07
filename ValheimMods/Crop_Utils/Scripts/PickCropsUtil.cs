@@ -5,6 +5,11 @@ using UnityEngine;
 
 namespace Crop_Utils
 {
+    /// <summary>
+    /// Class for interacting with multiple ground objects at once. 
+    /// While the original intention was for crops, this works for most interactables such as 
+    /// stone, flint, branches, bee hives, dandelions and berries.
+    /// </summary>
     [HarmonyPatch]
     public static class PickCropsUtil
     {

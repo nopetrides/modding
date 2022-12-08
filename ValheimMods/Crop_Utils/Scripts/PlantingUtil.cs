@@ -180,7 +180,7 @@ namespace Crop_Utils
                 //CropUtils.Log.LogInfo(2);
                 if (!__instance.HaveStamina(staminaCost))
                 {
-                    Hud.instance.StaminaBarNoStaminaFlash();
+                    Hud.instance.StaminaBarEmptyFlash();
                     CropUtils.Log.LogInfo("Did not plant: Not Enough Stamina");
                     break;
                 }
@@ -210,11 +210,12 @@ namespace Crop_Utils
                 _placedPiece.m_placeEffect.Create(plantPosition, _placedRotation, newPlant.transform, 1f, -1);
 
                 Game.instance.GetPlayerProfile().m_playerStats.m_builds++;
-                __instance.ConsumeResources(_placedPiece.m_resources, 0);
-                __instance.UseStamina(staminaCost);
-                //CropUtils.Log.LogInfo(7);
-                // Remove tool durability
-                if (equippedTool.m_shared.m_useDurability)
+                    __instance.ConsumeResources(_placedPiece.m_resources, 0);
+                    __instance.UseStamina(staminaCost);
+
+                    //CropUtils.Log.LogInfo(7);
+                    // Remove tool durability
+                    if (equippedTool.m_shared.m_useDurability)
                 {
                     equippedTool.m_durability -= durabilityCost;
                     if (equippedTool.m_durability <= 0f)
@@ -562,7 +563,7 @@ namespace Crop_Utils
                     }
                     else if (availableStamina < equippedTool.m_shared.m_attack.m_attackStamina / CropUtils.Instance.Discount)
                     {
-                        Hud.instance.StaminaBarNoStaminaFlash();
+                        Hud.instance.StaminaBarEmptyFlash();
                         invalidPlacementHighlight = true;
                     }
                     else if (!(bool)_noPlacementCostField.GetValue(__instance) && !__instance.HaveRequirements(_fakeResourcePiece, 0))

@@ -1,0 +1,10 @@
+{
+    "name": "CropUtils",
+    "version_number": "1.1.0",
+    "website_url": "https://github.com/nopetrides/modding/tree/main/ValheimMods/Crop_Utils",
+    "description": "My second mod. It has two main purposes - 1) Pick crops in an area with one interaction. 2) Plant many crops at once with pattern options that respect healthy plant distancing. Uses BepInEx.",
+    "dependencies": [
+        "denikson-BepInExPack_Valheim-5.4.1901",
+        "NoPetRides-NoPetRides_ModUtils-1.0.0"
+    ]
+}

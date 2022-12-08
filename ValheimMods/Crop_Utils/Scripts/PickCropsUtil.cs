@@ -47,7 +47,7 @@ namespace Crop_Utils
             {
                 int num = (int)m_interactMaskField.GetValue(__instance);
                 foreach (Collider collider in Physics.OverlapSphere(go.transform.position,
-                    CropUtils.Instance.UtilRange, num))
+                    CropUtils.Instance.UtilRange/2, num))
                 {
                     Pickable nearbyPickable;
                     if (collider == null)

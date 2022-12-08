@@ -14,3 +14,4 @@ D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.csproj.
 D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.csproj.CopyComplete
 D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.dll
 D:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.pdb
+D:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\assembly_utils_publicized.dll

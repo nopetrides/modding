@@ -34,7 +34,11 @@ Limitations:
 - Does not stop the very first crop from being planted even if it would be unhealthy. I have tried to at least tweak the display so you would know not to plant it there.
 
 Changelog:
+
 1.1.0
+
 Mistlands updates. Small pickup radius tweak to match debug sphere.
+
 1.0.0
+
 Release

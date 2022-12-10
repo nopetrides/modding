@@ -1,4 +1,4 @@
-CropUtils v 1.0.0
+CropUtils v 1.1.0
 
 This is my second Mod. 
 It has two main purposes:
@@ -17,6 +17,9 @@ See config for default keybinds, and change at your leasuire.
 
 Configurables:
 -Keybinds for primary / secondary tool function
+Defaults:
+  Pickup: Hold ALT to pickup crops in an area (works for rocks and branches too)
+  Planting: Hold ALT to plant in a line, hold Z to lock the line in place. Pressing Z first then ALT creates a circle packed pattern for planting
 -Tool range & range increase / decrease keybinds
 -Discount for stamina and durability
 -Show / hide range helper

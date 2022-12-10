@@ -1,22 +1,24 @@
 # CropUtils v 1.1.0
 
-This is my second Mod. 
-It has two main purposes:
-1) Pick crops (and other interactables like bee hives) in an area with one interaction. 
+This is my second Mod. It is inspired by MassFarming by Xeio, but introduces additional functionality and doesn't use a grid pattern. 
+Check out Xeio's mod here: https://github.com/Xeio/MassFarming
+
+This mod has two main purposes:
+1) Pick crops (and other interactables like beehives, rocks, branches, herbs and more) in an area with one interaction.
 2) Plant many crops at once with pattern options that respect healthy plant distancing.
-Conceptually based on MassFarming by Xeio, but not limited to a square grid.
+This uses hex grid circle packing to maximize crop placement efficiency instead of a less space efficient and more limiting square grid.
 
 Planting will skip any invalid plant locations, so you can use this to fill in any gaps in your fields.
 
 Usable entirely on client, even in multiplayer - though if in MP, you should probably get permission from the admin to use.
 Dedicated servers do not need this installed.
 
-Uses BepInEx and my own mod library which contains a lightweight version of Jotunn libs.
+Dependant on BepInEx (https://valheim.thunderstore.io/package/denikson/BepInExPack_Valheim/) and my own mod library (https://github.com/nopetrides/modding/tree/main/ValheimMods/NPR_Valheim_ModUtils) which contains a lightweight version of Jotunn inspired functionality.
 
 See config for all configurables, and change at your leasuire.
 
 Default keybinds:
-  - Pickup: Hold left ALT to pickup crops in an area (works for beehives, rocks, branches, herbs and more)
+  - Pickup: Hold left ALT to pickup in an area 
   - Planting Line: Hold left ALT to plant in a line, and optionally hold Z to lock the line in place.
   - Planting Hex: Press and hold Z first then left ALT creates a circle packed pattern for mass planting
 

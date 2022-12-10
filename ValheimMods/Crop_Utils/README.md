@@ -13,26 +13,28 @@ Dedicated servers do not need this installed.
 
 Uses BepInEx and my own mod library which contains a lightweight version of Jotunn libs.
 
-See config for default keybinds, and change at your leasuire.
+See config for all configurables, and change at your leasuire.
+
+Default keybinds:
+  - Pickup: Hold left ALT to pickup crops in an area (works for beehives, rocks, branches, herbs and more)
+  - Planting Line: Hold left ALT to plant in a line, and optionally hold Z to lock the line in place.
+  - Planting Hex: Press and hold Z first then left ALT creates a circle packed pattern for mass planting
 
 Configurables:
--Keybinds for primary / secondary tool function
-Defaults:
-  Pickup: Hold ALT to pickup crops in an area (works for rocks and branches too)
-  Planting: Hold ALT to plant in a line, hold Z to lock the line in place. Pressing Z first then ALT creates a circle packed pattern for planting
--Tool range & range increase / decrease keybinds
--Discount for stamina and durability
--Show / hide range helper
--Support for gamepad keybinds, but admittedly defaults are probably not good. Let me know if you find some good controller binds.
+- Keybinds for primary / secondary tool function
+- Tool range & range increase / decrease keybinds
+- Discount for stamina and durability
+- Show / hide range helper
+- Support for gamepad keybinds, but admittedly defaults are probably not good. Let me know if you find some good controller binds.
 
 Limitations:
--Hex grid does not align with rotation like line tool does. I'd like to fix that in future.
--In order for hex grid to not cause lag when building, it has to be locked in place while it builds. The line tool does not.
--Hex grid will cause a bunch of lag when planting very large grids.
--Does not stop the very first crop from being planted even if it would be unhealthy.
+- Hex grid does not align with rotation like line tool does. I'd like to fix that in future.
+- In order for hex grid to not cause lag when building, it has to be locked in place while it builds. The line tool does not.
+- Hex grid will cause a bunch of lag when planting very large grids.
+- Does not stop the very first crop from being planted even if it would be unhealthy. I have tried to at least tweak the display so you would know not to plant it there.
 
 Changelog:
 1.1.0
-Mistlands updates. Small pickup radius tweak.
+Mistlands updates. Small pickup radius tweak to match debug sphere.
 1.0.0
 Release

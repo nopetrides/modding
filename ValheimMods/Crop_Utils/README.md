@@ -30,3 +30,9 @@ Limitations:
 -In order for hex grid to not cause lag when building, it has to be locked in place while it builds. The line tool does not.
 -Hex grid will cause a bunch of lag when planting very large grids.
 -Does not stop the very first crop from being planted even if it would be unhealthy.
+
+Changelog:
+1.1.0
+Mistlands updates. Small pickup radius tweak.
+1.0.0
+Release

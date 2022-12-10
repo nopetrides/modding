@@ -1,4 +1,4 @@
-SomethingNearby v 1.0.0
+# SomethingNearby v 1.0.0
 
 This is my first mod! It is a simple mod that scrapes the console logs and looks for 
 messages like "Deer spawned" or "Dungeon Loaded" and then places a message within 

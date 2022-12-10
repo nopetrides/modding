@@ -7,10 +7,10 @@ the in-game UI for you to be notified.
 Uses BepInEx and my own mod library which contains a lightweight version of Jotunn libs.
 
 Configurables:
-Turn messages on / off
-Message color
-Message timings
-Message position
+- Turn messages on / off
+- Message color
+- Message timings
+- Message position
 
 Limitations:
 - Only English messaging for now (localization can be added in a future version)

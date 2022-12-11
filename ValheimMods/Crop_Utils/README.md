@@ -21,11 +21,12 @@ Default keybinds:
   - Pickup: Hold left ALT to pickup in an area 
   - Planting Line: Hold left ALT to plant in a line, and optionally hold Z to lock the line in place.
   - Planting Hex: Press and hold Z first then left ALT creates a circle packed pattern for mass planting
+  - Change range: Use the ]} key to increase the size and range of the utils, and [{ to decrease the range of the utils
 
 Configurables:
-- Keybinds for primary / secondary tool function
-- Tool range & range increase / decrease keybinds
-- Discount for stamina and durability
+- Keybinds for primary & secondary tool function
+- Pickup range display, range increase & decrease keybinds
+- Discount for stamina and durability use when multiplanting
 - Show / hide range helper
 - Support for gamepad keybinds, but admittedly defaults are probably not good. Let me know if you find some good controller binds.
 

@@ -1,4 +1,4 @@
-# CropUtils v 1.1.0
+# CropUtils v 1.2.1
 
 This is my second Mod. It is inspired by MassFarming by Xeio, but introduces additional functionality and doesn't use a grid pattern. 
 Check out Xeio's mod here: https://github.com/Xeio/MassFarming
@@ -40,6 +40,10 @@ Limitations:
 - Mod compatability is not guaranteed, but this mod offers a generic solution should should work for most use cases.
 
 Changelog:
+
+1.2.1
+
+Readme updates for 1.2.0
 
 1.2.0
 

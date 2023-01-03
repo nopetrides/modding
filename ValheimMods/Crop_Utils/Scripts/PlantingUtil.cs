@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿//#define LOGGING
+
+using HarmonyLib;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +8,7 @@ using System.Reflection;
 using UnityEngine;
 using static ItemDrop;
 using Object = UnityEngine.Object;
+
 
 namespace Crop_Utils
 {
@@ -141,19 +144,22 @@ namespace Crop_Utils
         /// <param name="__instance"></param>
         private static void PlaceNextFrame(Player __instance)
         {
-            Plant plantComponent = _placedPiece.gameObject.GetComponent<Plant>();
-            if (!plantComponent)
+            float plantGrowthRadius = TryFindPlantGrowthRadius(_placedPiece.gameObject);
+            if (plantGrowthRadius <= 0) 
             {
                 return;
             }
+            
             if (!Input.GetKey(CropUtils.Instance.UtilControllerButton.MainKey) &&
                 !Input.GetKey(CropUtils.Instance.UtilHotKey.MainKey))
             {
                 return;
             }
 
-            List <Vector3> newPlantPositions = BuildPlantingPositions(_placedPosition, plantComponent);
-            CropUtils.Log.LogInfo($"Planting {newPlantPositions.Count} new plants...");
+            List <Vector3> newPlantPositions = BuildPlantingPositions(_placedPosition, plantGrowthRadius);
+            #if LOGGING 
+            CropUtils.Log.LogInfo($"Planting {newPlantPositions.Count} new plants..."); 
+            #endif
             int plantSuccesses = 0;
 
             // Get the tool in hand
@@ -163,42 +169,51 @@ namespace Crop_Utils
 
             foreach (Vector3 plantPosition in newPlantPositions)
             {
+                #if LOGGING
                 CropUtils.Log.LogInfo($"Planting at position {plantPosition.x}, {plantPosition.y}, {plantPosition.z} ");
+                #endif
                 if ((_placedPosition.position == plantPosition))
                 {
                     CropUtils.Log.LogError("Did not plant: Position matches origin");
                     continue;
                 }
                 //CropUtils.Log.LogInfo(1);
-
                 Heightmap heightmap = Heightmap.FindHeightmap(plantPosition);
                 if (heightmap == null || (_placedPiece.m_cultivatedGroundOnly && !heightmap.IsCultivated(plantPosition)))
                 {
+                    #if LOGGING
                     CropUtils.Log.LogInfo($"Did not plant: Not valid plant surface. Needs cultived {_placedPiece.m_cultivatedGroundOnly}, On cultivated {heightmap.IsCultivated(plantPosition)}");
+                    #endif
                     continue;
                 }
                 //CropUtils.Log.LogInfo(2);
                 if (!__instance.HaveStamina(staminaCost))
                 {
                     Hud.instance.StaminaBarEmptyFlash();
+                    #if LOGGING
                     CropUtils.Log.LogInfo("Did not plant: Not Enough Stamina");
+                    #endif
                     break;
                 }
                 //CropUtils.Log.LogInfo(3);
                 if (!(bool)_noPlacementCostField.GetValue(__instance) && !__instance.HaveRequirements(_placedPiece, 0))
                 {
+                    #if LOGGING
                     CropUtils.Log.LogInfo("Did not plant: Missing Required Items");
+                    #endif
                     break;
                 }
                 //CropUtils.Log.LogInfo(4);
-                if (!HasGrowSpace(plantPosition, plantComponent))
+                if (!HasGrowSpace(plantPosition, plantGrowthRadius))
                 {
+                    #if LOGGING
                     CropUtils.Log.LogInfo("Did not plant: Not enough space");
+                    #endif
                     continue;
                 }
                 //CropUtils.Log.LogInfo(5);
                 plantSuccesses++;
-                GameObject newPlant = Object.Instantiate(plantComponent.gameObject, plantPosition, _placedRotation);
+                GameObject newPlant = Object.Instantiate(_placedPiece.gameObject, plantPosition, _placedRotation);
                 Piece newPlantPiece = newPlant.GetComponent<Piece>();
                 if (newPlantPiece)
                 {
@@ -250,7 +265,7 @@ namespace Crop_Utils
         /// Returns the coordinates for where the planting util would place extra plants
         /// </summary>
         /// <returns></returns>
-        private static List<Vector3> BuildPlantingPositions(Transform originPos, Plant toPlant)
+        private static List<Vector3> BuildPlantingPositions(Transform originPos, float plantGrowthRadius)
         {
             if (Input.GetKey(CropUtils.Instance.UtilAltControllerButton.MainKey) ||
                 Input.GetKey(CropUtils.Instance.UtilAltHotKey.MainKey))
@@ -258,7 +273,7 @@ namespace Crop_Utils
                 if (_lastPlantedPosition != null)
                 {
                     originPos.position = _lastPlayerGhostPosition;
-                    UpdatePlayerGhostState(originPos);
+                    UpdatePlayerGhostState(originPos, plantGrowthRadius);
                     return _lastPlantedPosition;
                 }
                 if (_hexListCoroutine != null)
@@ -266,13 +281,13 @@ namespace Crop_Utils
                     CropUtils.Instance.StopCoroutine(_hexListCoroutine);
                 }
                 _lastPlayerGhostPosition = originPos.position;
-                _lastPlantedPosition = HexPlantPositions(originPos, toPlant);
+                _lastPlantedPosition = HexPlantPositions(originPos, plantGrowthRadius);
                 return _lastPlantedPosition;
             }
             else
             {
                 _lastPlayerGhostPosition = originPos.position;
-                _lastPlantedPosition = LinePlantPositions(originPos, toPlant);
+                _lastPlantedPosition = LinePlantPositions(originPos, plantGrowthRadius);
                 return _lastPlantedPosition;
             }
         }
@@ -281,14 +296,14 @@ namespace Crop_Utils
         /// Make sure the placment state is correct it's state is correct
         /// </summary>
         /// <param name="originGhost"></param>
-        private static void UpdatePlayerGhostState(Transform originGhost)
+        private static void UpdatePlayerGhostState(Transform originGhost, float plantGrowthRadius)
         {
             bool invalidPlacementHighlight = false;
             // This is the grow check that the game does not do preemptively
             if (Input.GetKey(CropUtils.Instance.UtilControllerButton.MainKey) ||
                 Input.GetKey(CropUtils.Instance.UtilHotKey.MainKey))
             {
-                if (!HasGrowSpace(originGhost.position, originGhost.GetComponent<Plant>()))
+                if (!HasGrowSpace(originGhost.position, plantGrowthRadius))
                 {
                     invalidPlacementHighlight = true;
                     originGhost.GetComponent<Piece>().SetInvalidPlacementHeightlight(invalidPlacementHighlight);
@@ -315,15 +330,15 @@ namespace Crop_Utils
         /// <param name="toPlant"></param>
         /// <param name="rotation"></param>
         /// <returns></returns>
-        private static List<Vector3> HexPlantPositions(Transform originPos, Plant toPlant)
+        private static List<Vector3> HexPlantPositions(Transform originPos, float plantGrowthRadius)
         {
             Vector3 arcDegrees = new Vector3(0, 60, 0);
             int maxDistanceFromOrigin = CropUtils.Instance.UtilRange;
             List<Vector3> hexes = new List<Vector3>();
-            float distanceBetween = toPlant.m_growRadius * 2;
+            float distanceBetween = plantGrowthRadius * 2;
             _hexListCoroutine = CropUtils.Instance.StartCoroutine(BuildHexList(originPos, maxDistanceFromOrigin, hexes, distanceBetween));
 
-            #region Previous Attempts
+#region Previous Attempts
             /*float maxDistanceFromOrigin = CropUtils.Instance.UtilRange;
             float distanceSqrd = maxDistanceFromOrigin * maxDistanceFromOrigin;
             float triangleGridHeight = (toPlant.m_growRadius * Mathf.Sqrt(3) / 2);
@@ -395,7 +410,7 @@ namespace Crop_Utils
                                 }
                             }
                         }*/
-            #endregion
+#endregion
 
             //CropUtils.Log.LogInfo("Total positions: " + hexes.Count);
             return hexes;
@@ -442,12 +457,11 @@ namespace Crop_Utils
         /// Creates a list of positions for planting out in a row from the origin
         /// </summary>
         /// <param name="originPos"></param>
-        /// <param name="toPlant"></param>
-        /// <param name="rotation"></param>
+        /// <param name="plantGrowthRadius"></param>
         /// <returns></returns>
-        private static List<Vector3> LinePlantPositions(Transform originPos, Plant toPlant)
+        private static List<Vector3> LinePlantPositions(Transform originPos, float plantGrowthRadius)
         {
-            float growthDiameter = toPlant.m_growRadius * 2f;
+            float growthDiameter = plantGrowthRadius * 2f;
 
             int expectedQuantityOfGhosts = Mathf.CeilToInt(CropUtils.Instance.UtilRange / growthDiameter);
 
@@ -474,9 +488,9 @@ namespace Crop_Utils
         /// <param name="newPos"></param>
         /// <param name="plant"></param>
         /// <returns></returns>
-        private static bool HasGrowSpace(Vector3 newPos, Plant plant)
+        private static bool HasGrowSpace(Vector3 newPos, float plantGrowthRadius)
         {
-            return Physics.OverlapSphere(newPos, plant.m_growRadius, _plantSpaceMask).Length == 0;
+            return Physics.OverlapSphere(newPos, plantGrowthRadius, _plantSpaceMask).Length == 0;
         }
 
         [HarmonyPostfix]
@@ -494,6 +508,9 @@ namespace Crop_Utils
             if (!gameObject || !gameObject.activeSelf)
             {
                 SetGhostsActive(false);
+                #if LOGGING
+                CropUtils.Log.LogWarning("No game object in placement field.");
+                #endif
                 return;
             }
             if (!Input.GetKey(CropUtils.Instance.UtilControllerButton.MainKey) &&
@@ -501,14 +518,28 @@ namespace Crop_Utils
             {
                 _lastPlantedPosition = null;
                 SetGhostsActive(false);
+                #if LOGGING
+                CropUtils.Log.LogWarning("No hotkey pressed.");
+                #endif
                 return;
             }
-            Plant plantComponent = gameObject.GetComponent<Plant>();
-            if (!plantComponent)
+
+            // Allow for spacing adjustment while in this mode
+            if (Input.GetKeyDown(CropUtils.Instance.IncreaseSpacingHotKey.MainKey))
             {
-                SetGhostsActive(false);
+                CropUtils.Instance.ChangeSpacing(0.1f);
+            }
+            if (Input.GetKeyDown(CropUtils.Instance.DecreaseSpacingHotKey.MainKey))
+            {
+                CropUtils.Instance.ChangeSpacing(-0.1f);
+            }
+
+            float plantGrowthRadius = TryFindPlantGrowthRadius(gameObject);
+            if (plantGrowthRadius <= 0)
+            {
                 return;
             }
+
             // Allow for distance adjustment while in this mode
             if (Input.GetKeyDown(CropUtils.Instance.IncreaseRangeControllerButton.MainKey) || 
                 Input.GetKeyDown(CropUtils.Instance.IncreaseRangeHotKey.MainKey))
@@ -520,10 +551,12 @@ namespace Crop_Utils
             {
                 CropUtils.Instance.ChangeRange(-1);
             }
+
             // Ensure the ghosts list is ready
-            if (!DidGhostsBuild(__instance, plantComponent))
+            if (!DidGhostsBuild(__instance, plantGrowthRadius))
             {
                 SetGhostsActive(false);
+                CropUtils.Log.LogError("Failed to build Ghosts");
                 return;
             }
 
@@ -535,7 +568,7 @@ namespace Crop_Utils
             _fakeResourcePiece.m_resources[0].m_amount = requirement.m_amount;
             float availableStamina = __instance.GetStamina();
             ItemDrop.ItemData equippedTool = __instance.GetRightItem();
-            List<Vector3> list = BuildPlantingPositions(gameObject.transform, plantComponent);
+            List<Vector3> list = BuildPlantingPositions(gameObject.transform, plantGrowthRadius);
 
             //CropUtils.Log.LogInfo($"Placing {_placementGhosts.Length} to {list.Count} positions");
             for (int i = 0; i < _placementGhosts.Length && i < list.Count; i++)
@@ -557,7 +590,7 @@ namespace Crop_Utils
                     {
                         invalidPlacementHighlight = true;
                     }
-                    else if (!HasGrowSpace(ghostPosition, plantComponent))
+                    else if (!HasGrowSpace(ghostPosition, plantGrowthRadius))
                     {
                         invalidPlacementHighlight = true;
                     }
@@ -582,10 +615,10 @@ namespace Crop_Utils
         /// <param name="player"></param>
         /// <param name="toPlant"></param>
         /// <returns></returns>
-        private static bool DidGhostsBuild(Player player, Plant toPlant)
+        private static bool DidGhostsBuild(Player player, float plantGrowthRadius)
         {
             int expectedQuantityOfGhosts;
-            expectedQuantityOfGhosts = Mathf.CeilToInt(CropUtils.Instance.UtilRange / (toPlant.m_growRadius * 2f));
+            expectedQuantityOfGhosts = Mathf.CeilToInt(CropUtils.Instance.UtilRange / (plantGrowthRadius * 2f));
             
             if (Input.GetKey(CropUtils.Instance.UtilAltControllerButton.MainKey) ||
                 Input.GetKey(CropUtils.Instance.UtilAltHotKey.MainKey))
@@ -739,6 +772,42 @@ namespace Crop_Utils
             {
                 Object.Destroy(lightComponents[i]);
             }
+        }
+
+        /// <summary>
+        /// A method to fetch the growth radius.
+        /// This may need to support many different mod systems and their growth radius variables.
+        /// </summary>
+        /// <param name="objectToGrow"></param>
+        /// <returns></returns>
+        private static float TryFindPlantGrowthRadius(GameObject objectToGrow)
+        {
+            float plantGrowthRadius = CropUtils.Instance.CustomSpacing;
+            if (CropUtils.Instance.AlwaysUseCustomSpacing)
+            {
+                return plantGrowthRadius;
+            }
+
+            Plant plantComp = objectToGrow.GetComponent<Plant>();
+            if (!plantComp)
+            {
+                #if LOGGING
+                CropUtils.Log.LogWarning("Unsupported - trying to place an item that is not a <Plant>");
+                #endif
+                if (CropUtils.Instance.AllowPlantAnything)
+                {
+                    return plantGrowthRadius;
+                }
+                else
+                {
+                    return -1f;
+                }
+            }
+            else
+            {
+                plantGrowthRadius = plantComp.m_growRadius;
+            }
+            return plantGrowthRadius;
         }
     }
 }

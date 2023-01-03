@@ -1,4 +1,4 @@
-## CropUtils v 1.1.0 ##
+## CropUtils v 1.2.0 ##
 
 This is my second Mod. 
 It has two main purposes:
@@ -30,3 +30,13 @@ Limitations:
 
 Update 1.1.0:
 Mistlands compatibility. Tweak pickup range to more closely match debug sphere.
+
+Update 1.2.0:
+Mod compatibilty settings.
+The mod should now support other crop and planting mods that utilize the cultivator to plant other crops, such as PlantEverything.
+To use this mod with other mods, enable "Mod Compatability Mode" (IgnorePlantTypeRestriction) in the config file (run the game at least once with the mod installed to generate the config.) to plant any kind of plantable you have access too.
+
+Mod compatability uses custom spacing to allow you to set the spacing to use for various custom mod growables.
+Optionally, you can also enable "Custom Spacing Only" if you have mods that override the default crop growth spacing or that disable it completely.
+
+It's important to note that the custom spacing is only for the tool's placement, and will not influence the growth of the plant. Whatever the plant's growth radius is set when it decides if it has enough space or not will remain and is unaffected by this mod.If for some aethestic reason you wish to have custom spacing, simply ensure that the custom spacing is at least the minimum required for the mod.

@@ -20,7 +20,7 @@ namespace Crop_Utils
 
         public const string PluginGUID = "com.nopetrides.valheim.crop-utils";
         public const string PluginName = "Crop Utils";
-        public const string PluginVersion = "1.1.0";
+        public const string PluginVersion = "1.2.0";
         public const string VALHEIM_EXE_NAME = "valheim.exe";
         internal const string LoggerName = "CropUtilsLog";
 
@@ -57,6 +57,22 @@ namespace Crop_Utils
         private ConfigEntry<KeyboardShortcut> m_utilAltHotKey;
         public KeyboardShortcut UtilAltHotKey => m_utilAltHotKey.Value;
 
+        // Ignore <Plant> type when trying to plant
+        private ConfigEntry<bool> m_allowPlantAnything;
+        public bool AllowPlantAnything => m_allowPlantAnything.Value;
+        // Ignore m_growRadius when trying to plant, use custom spacing instead
+        private ConfigEntry<bool> m_alwaysUseCustomSpacing;
+        public bool AlwaysUseCustomSpacing => m_alwaysUseCustomSpacing.Value;
+        // Custom Spacing distance in Unity units (defaults 0.5f for crops and 2f for trees)
+        private ConfigEntry<float> m_manualCropSpacing;
+        public float CustomSpacing => m_manualCropSpacing.Value;
+
+        private ConfigEntry<KeyboardShortcut> m_increaseSpacingHotKey;
+        public KeyboardShortcut IncreaseSpacingHotKey => m_increaseSpacingHotKey.Value;
+        private ConfigEntry<KeyboardShortcut> m_decreaseSpacingHotKey;
+        public KeyboardShortcut DecreaseSpacingHotKey => m_decreaseSpacingHotKey.Value;
+
+        // Shared logger for this mod
         internal static ManualLogSource Log;
 
         /// <summary>
@@ -142,11 +158,40 @@ namespace Crop_Utils
                 "Utlity Alternative Hot Key",
                 new KeyboardShortcut(KeyCode.Z, new KeyCode[0]),
                 new ConfigDescription("Key to enable farming utility helpers when planting or picking. Should pick any type of crop or use the radius placement for crops."));
-
+            
+            // Discounts
             m_cropUtilDiscount = Config.Bind("Stamina & Tool Durability Discount",
                "StaminaDiscountConfig",
                20,
                new ConfigDescription("The divider for how much less stamina planting uses when using the util (stamina cost / 20) default"));
+            
+            // Compatability mode (allow custom crops)
+            m_allowPlantAnything = Config.Bind("Mod Compatability Mode",
+                "IgnorePlantTypeRestriction",
+                false,
+                new ConfigDescription("Should the tool respect default Valheim plantable types, or try to plant anything? Set to true if using another plantable mod. Compatability is not guaranteed."));
+
+            // Custom Crop Spacing controls
+            m_alwaysUseCustomSpacing = Config.Bind("Custom Crop Spacing",
+                "CustomSpacingOnly",
+                false,
+                new ConfigDescription("Should the tool ignore crop growth radius and just use the custom spacing."));
+
+            m_manualCropSpacing = Config.Bind("Custom Crop Spacing",
+                "CustomCropSpacingDistance",
+                0.5f,
+                new ConfigDescription(
+                    "The distance (in Unity Units) to space plantables. Normal crops are 0.5, trees are 2.0",
+                    new AcceptableValueRange<float>(.1f, 10f)));
+
+            m_increaseSpacingHotKey = Config.Bind("Custom Crop Spacing",
+                "Increase Spacing Hot Key",
+                new KeyboardShortcut(KeyCode.Minus, new KeyCode[0]),
+                new ConfigDescription("Key to increase the spacing between plants while using the cultivator."));
+            m_decreaseSpacingHotKey = Config.Bind("Custom Crop Spacing",
+                "Decrease Spacing Hot Key",
+               new KeyboardShortcut(KeyCode.Equals, new KeyCode[0]),
+                new ConfigDescription("Key to decrease the spacing between plants while using the cultivator."));
         }
 
         /// <summary>
@@ -156,6 +201,17 @@ namespace Crop_Utils
         public void ChangeRange(int rangeChange)
         {
             m_utilRange.Value += rangeChange;
+            Log.LogInfo($"Range is now {m_utilRange.Value}");
+        }
+
+        /// <summary>
+        /// Public method to change the range of the custom spacing distance
+        /// </summary>
+        /// <param name="spacingChange"></param>
+        public void ChangeSpacing(float spacingChange)
+        {
+            m_manualCropSpacing.Value += spacingChange;
+            Log.LogInfo($"Spacing is now {m_manualCropSpacing.Value}");
         }
     }
 }

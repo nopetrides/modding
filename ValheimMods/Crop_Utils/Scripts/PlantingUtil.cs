@@ -224,7 +224,7 @@ namespace Crop_Utils
                 // Play placement vfx
                 _placedPiece.m_placeEffect.Create(plantPosition, _placedRotation, newPlant.transform, 1f, -1);
 
-                Game.instance.GetPlayerProfile().m_playerStats.m_builds++;
+                Game.instance.GetPlayerProfile().m_playerStats[PlayerStatType.Builds]++;
                     __instance.ConsumeResources(_placedPiece.m_resources, 0);
                     __instance.UseStamina(staminaCost);
 

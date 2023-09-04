@@ -10,7 +10,7 @@ using UnityEngine.Events;
 
 namespace NPR_Valheim_ModUtils
 {
-    [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PluginInfo. PLUGIN_VERSION)]
+    [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
     [BepInProcess(VALHEIM_EXE_NAME)]
     public class ModUtilsManager : BaseUnityPlugin
     {
@@ -215,7 +215,7 @@ namespace NPR_Valheim_ModUtils
             // Create a static logger we can use
             Log = new ManualLogSource(LoggerName);
             BepInEx.Logging.Logger.Sources.Add(Log);
-            Log.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loading...");
+            Log.LogInfo($"Plugin {PLUGIN_GUID} is loading...");
 
             // Create harmony patching object
             Harmony = new Harmony(PLUGIN_GUID);
@@ -229,7 +229,7 @@ namespace NPR_Valheim_ModUtils
             Init();
 
             Game.isModded = true;
-            Log.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} Loaded successfully");
+            Log.LogInfo($"Plugin {PLUGIN_GUID} Loaded successfully");
         }
 
     }

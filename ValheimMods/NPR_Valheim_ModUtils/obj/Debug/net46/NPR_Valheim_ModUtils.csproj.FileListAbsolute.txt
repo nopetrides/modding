@@ -1,4 +1,3 @@
-D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\obj\Debug\net46\NPR_Valheim_ModUtils.csproj.AssemblyReference.cache
 D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\obj\Debug\net46\PluginInfo.cs
 D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\obj\Debug\net46\NPR_Valheim_ModUtils.GeneratedMSBuildEditorConfig.editorconfig
 D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\obj\Debug\net46\NPR_Valheim_ModUtils.AssemblyInfoInputs.cache
@@ -7,8 +6,14 @@ D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\obj\Debug\net46\NPR_Valh
 D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\bin\Debug\net46\NPR_Valheim_ModUtils.dll
 D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\bin\Debug\net46\NPR_Valheim_ModUtils.pdb
 D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\bin\Debug\net46\assembly_guiutils_publicized.dll
+D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\bin\Debug\net46\assembly_lux_publicized.dll
+D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\bin\Debug\net46\assembly_postprocessing_publicized.dll
+D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\bin\Debug\net46\assembly_simplemeshcombine_publicized.dll
+D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\bin\Debug\net46\assembly_steamworks_publicized.dll
+D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\bin\Debug\net46\assembly_sunshafts_publicized.dll
 D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\bin\Debug\net46\assembly_utils_publicized.dll
 D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\bin\Debug\net46\assembly_valheim_publicized.dll
+D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\obj\Debug\net46\NPR_Valheim_ModUtils.csproj.AssemblyReference.cache
 D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\obj\Debug\net46\NPR_Valheim_ModUtils.csproj.CopyComplete
 D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\obj\Debug\net46\NPR_Valheim_ModUtils.dll
 D:\Programming\modding\ValheimMods\NPR_Valheim_ModUtils\obj\Debug\net46\NPR_Valheim_ModUtils.pdb

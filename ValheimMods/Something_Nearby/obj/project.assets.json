@@ -42,14 +42,10 @@
           "MonoMod.RuntimeDetour": "21.12.13.1"
         },
         "compile": {
-          "lib/net45/0Harmony.dll": {
-            "related": ".xml"
-          }
+          "lib/net45/0Harmony.dll": {}
         },
         "runtime": {
-          "lib/net45/0Harmony.dll": {
-            "related": ".xml"
-          }
+          "lib/net45/0Harmony.dll": {}
         }
       },
       "Microsoft.NETFramework.ReferenceAssemblies/1.0.2": {
@@ -67,32 +63,16 @@
       "Mono.Cecil/0.11.4": {
         "type": "package",
         "compile": {
-          "lib/net40/Mono.Cecil.Mdb.dll": {
-            "related": ".pdb"
-          },
-          "lib/net40/Mono.Cecil.Pdb.dll": {
-            "related": ".pdb"
-          },
-          "lib/net40/Mono.Cecil.Rocks.dll": {
-            "related": ".pdb"
-          },
-          "lib/net40/Mono.Cecil.dll": {
-            "related": ".Mdb.pdb;.pdb;.Pdb.pdb;.Rocks.pdb"
-          }
+          "lib/net40/Mono.Cecil.Mdb.dll": {},
+          "lib/net40/Mono.Cecil.Pdb.dll": {},
+          "lib/net40/Mono.Cecil.Rocks.dll": {},
+          "lib/net40/Mono.Cecil.dll": {}
         },
         "runtime": {
-          "lib/net40/Mono.Cecil.Mdb.dll": {
-            "related": ".pdb"
-          },
-          "lib/net40/Mono.Cecil.Pdb.dll": {
-            "related": ".pdb"
-          },
-          "lib/net40/Mono.Cecil.Rocks.dll": {
-            "related": ".pdb"
-          },
-          "lib/net40/Mono.Cecil.dll": {
-            "related": ".Mdb.pdb;.pdb;.Pdb.pdb;.Rocks.pdb"
-          }
+          "lib/net40/Mono.Cecil.Mdb.dll": {},
+          "lib/net40/Mono.Cecil.Pdb.dll": {},
+          "lib/net40/Mono.Cecil.Rocks.dll": {},
+          "lib/net40/Mono.Cecil.dll": {}
         }
       },
       "MonoMod.RuntimeDetour/21.12.13.1": {
@@ -105,14 +85,10 @@
           "System"
         ],
         "compile": {
-          "lib/net452/MonoMod.RuntimeDetour.dll": {
-            "related": ".xml"
-          }
+          "lib/net452/MonoMod.RuntimeDetour.dll": {}
         },
         "runtime": {
-          "lib/net452/MonoMod.RuntimeDetour.dll": {
-            "related": ".xml"
-          }
+          "lib/net452/MonoMod.RuntimeDetour.dll": {}
         }
       },
       "MonoMod.Utils/21.12.13.1": {
@@ -124,14 +100,10 @@
           "System"
         ],
         "compile": {
-          "lib/net452/MonoMod.Utils.dll": {
-            "related": ".xml"
-          }
+          "lib/net452/MonoMod.Utils.dll": {}
         },
         "runtime": {
-          "lib/net452/MonoMod.Utils.dll": {
-            "related": ".xml"
-          }
+          "lib/net452/MonoMod.Utils.dll": {}
         }
       },
       "UnityEngine.Modules/2020.3.33": {
@@ -964,7 +936,7 @@
             "version": "[2020.3.33, )"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.402\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.413\\RuntimeIdentifierGraph.json"
       }
     }
   }

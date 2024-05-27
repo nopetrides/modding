@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using System.Net.Configuration;
 using UnityEngine;
 
 namespace Crop_Utils
@@ -69,7 +70,24 @@ namespace Crop_Utils
         {
             m_rangeIndicator = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             m_rangeIndicator.GetComponent<SphereCollider>().enabled = false; // Don't use this sphere for physics
-            var mat = new Material(Shader.Find("UI/Unlit/Transparent"));
+
+
+            var shaders = Resources.FindObjectsOfTypeAll(typeof(Shader));
+            Shader shader = null;
+            // for some reason Shader.Find("UI/Unlit/Transparent") fails, but this works as a bandaid. Not very efficient.
+            foreach (var s in shaders)
+            {
+                if (s != null)
+                {
+                    if (s.name == "UI/Unlit/Transparent")
+                    {
+                        shader = s as Shader;
+                        break;
+                    }
+                }
+            }
+            if (shader == null) return;
+            var mat = new Material(shader);
             var c = Color.blue;
             c.a = 0.05f;
             mat.color = c;

@@ -905,14 +905,14 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\NPR_Valheim_ModUtils.csproj",
+      "projectUniqueName": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\NPR_Valheim_ModUtils.csproj",
       "projectName": "NPR_Valheim_ModUtils",
-      "projectPath": "D:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\NPR_Valheim_ModUtils.csproj",
+      "projectPath": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\NPR_Valheim_ModUtils.csproj",
       "packagesPath": "C:\\Users\\nopet\\.nuget\\packages\\",
-      "outputPath": "D:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\obj\\",
+      "outputPath": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "D:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\NuGet.Config",
+        "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\NuGet.Config",
         "C:\\Users\\nopet\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -934,6 +934,11 @@
         "warnAsError": [
           "NU1605"
         ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -964,7 +969,7 @@
             "version": "[2020.3.33, )"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.100\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.300-preview.24203.14\\RuntimeIdentifierGraph.json"
       }
     }
   }

@@ -42,10 +42,14 @@
           "MonoMod.RuntimeDetour": "21.12.13.1"
         },
         "compile": {
-          "lib/net45/0Harmony.dll": {}
+          "lib/net45/0Harmony.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/net45/0Harmony.dll": {}
+          "lib/net45/0Harmony.dll": {
+            "related": ".xml"
+          }
         }
       },
       "Microsoft.NETFramework.ReferenceAssemblies/1.0.2": {
@@ -63,16 +67,32 @@
       "Mono.Cecil/0.11.4": {
         "type": "package",
         "compile": {
-          "lib/net40/Mono.Cecil.Mdb.dll": {},
-          "lib/net40/Mono.Cecil.Pdb.dll": {},
-          "lib/net40/Mono.Cecil.Rocks.dll": {},
-          "lib/net40/Mono.Cecil.dll": {}
+          "lib/net40/Mono.Cecil.Mdb.dll": {
+            "related": ".pdb"
+          },
+          "lib/net40/Mono.Cecil.Pdb.dll": {
+            "related": ".pdb"
+          },
+          "lib/net40/Mono.Cecil.Rocks.dll": {
+            "related": ".pdb"
+          },
+          "lib/net40/Mono.Cecil.dll": {
+            "related": ".Mdb.pdb;.pdb;.Pdb.pdb;.Rocks.pdb"
+          }
         },
         "runtime": {
-          "lib/net40/Mono.Cecil.Mdb.dll": {},
-          "lib/net40/Mono.Cecil.Pdb.dll": {},
-          "lib/net40/Mono.Cecil.Rocks.dll": {},
-          "lib/net40/Mono.Cecil.dll": {}
+          "lib/net40/Mono.Cecil.Mdb.dll": {
+            "related": ".pdb"
+          },
+          "lib/net40/Mono.Cecil.Pdb.dll": {
+            "related": ".pdb"
+          },
+          "lib/net40/Mono.Cecil.Rocks.dll": {
+            "related": ".pdb"
+          },
+          "lib/net40/Mono.Cecil.dll": {
+            "related": ".Mdb.pdb;.pdb;.Pdb.pdb;.Rocks.pdb"
+          }
         }
       },
       "MonoMod.RuntimeDetour/21.12.13.1": {
@@ -85,10 +105,14 @@
           "System"
         ],
         "compile": {
-          "lib/net452/MonoMod.RuntimeDetour.dll": {}
+          "lib/net452/MonoMod.RuntimeDetour.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/net452/MonoMod.RuntimeDetour.dll": {}
+          "lib/net452/MonoMod.RuntimeDetour.dll": {
+            "related": ".xml"
+          }
         }
       },
       "MonoMod.Utils/21.12.13.1": {
@@ -100,10 +124,14 @@
           "System"
         ],
         "compile": {
-          "lib/net452/MonoMod.Utils.dll": {}
+          "lib/net452/MonoMod.Utils.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/net452/MonoMod.Utils.dll": {}
+          "lib/net452/MonoMod.Utils.dll": {
+            "related": ".xml"
+          }
         }
       },
       "UnityEngine.Modules/2020.3.33": {
@@ -877,14 +905,14 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Programming\\modding\\ValheimMods\\Crop_Utils\\Crop_Utils.csproj",
+      "projectUniqueName": "G:\\Programming\\modding\\ValheimMods\\Crop_Utils\\Crop_Utils.csproj",
       "projectName": "Crop_Utils",
-      "projectPath": "D:\\Programming\\modding\\ValheimMods\\Crop_Utils\\Crop_Utils.csproj",
+      "projectPath": "G:\\Programming\\modding\\ValheimMods\\Crop_Utils\\Crop_Utils.csproj",
       "packagesPath": "C:\\Users\\nopet\\.nuget\\packages\\",
-      "outputPath": "D:\\Programming\\modding\\ValheimMods\\Crop_Utils\\obj\\",
+      "outputPath": "G:\\Programming\\modding\\ValheimMods\\Crop_Utils\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "D:\\Programming\\modding\\ValheimMods\\Crop_Utils\\NuGet.Config",
+        "G:\\Programming\\modding\\ValheimMods\\Crop_Utils\\NuGet.Config",
         "C:\\Users\\nopet\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -906,6 +934,11 @@
         "warnAsError": [
           "NU1605"
         ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -936,7 +969,7 @@
             "version": "[2020.3.33, )"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.413\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.300-preview.24203.14\\RuntimeIdentifierGraph.json"
       }
     }
   }

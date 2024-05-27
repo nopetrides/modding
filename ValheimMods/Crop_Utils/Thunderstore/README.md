@@ -1,12 +1,13 @@
-# CropUtils v 1.3.0
+# CropUtils v 1.4.1
 
-This is my second Mod. It is inspired by MassFarming by Xeio, but introduces additional functionality and doesn't use a grid pattern. 
+Inspired by MassFarming by Xeio, but uses more efficient triangle packing for optimal placement as well as harvesting a large area at once.
+
 Check out Xeio's mod here: https://github.com/Xeio/MassFarming
 
 This mod has two main purposes:
-1) Pick crops (and other interactables like beehives, rocks, branches, herbs and more) in an area with one interaction.
-2) Plant many crops at once with pattern options that respect healthy plant distancing.
-This uses hex grid circle packing to maximize crop placement efficiency instead of a less space efficient and more limiting square grid.
+1) Plant many crops at once with two pattern options, triangle packing or in a line that respect healthy plant distancing.
+This uses triangle packing hex grid to maximize crop placement efficiency instead of a less space efficient and more limiting square grid.
+2) Pick crops (and other interactables like beehives, rocks, branches, herbs and more) in an area with one interaction.
 
 Planting will skip any invalid plant locations, so you can use this to fill in any gaps in your fields.
 
@@ -18,11 +19,11 @@ Dependant on BepInEx (https://valheim.thunderstore.io/package/denikson/BepInExPa
 See config for all configurables, and change at your leasuire.
 
 Default keybinds:
-  - Pickup: Hold left ALT to pickup in an area 
+  - Pickup: While looking at a pick-able item, hold left ALT to pickup in an area 
   - Planting Line: Hold left ALT to plant in a line, and optionally hold Z to lock the line in place.
   - Planting Hex: Press and hold Z first then left ALT creates a circle packed pattern for mass planting
   - Change range: Use the ]} key to increase the size and range of the utils, and [{ to decrease the range of the utils
-  - Change spacing: If using custom spacing (disabled by default) use the - and + (techically the = key) to increase or decrease the manual space between plants.
+  - Change spacing: If using custom spacing (disabled by default) use the - and + keys to increase or decrease the manual space between plants.
 
 Configurables:
 - Keybinds for primary & secondary tool function
@@ -37,9 +38,18 @@ Limitations:
 - In order for hex grid to not cause lag when building, it has to be locked in place while it builds. The line tool does not.
 - Hex grid will cause a bunch of lag when planting very large grids.
 - Does not stop the very first crop from being planted even if it would be unhealthy. I have tried to at least tweak the display so you would know not to plant it there.
-- Mod compatability is not guaranteed, but this mod offers a generic solution should should work for most use cases.
+- Mod compatability is not guaranteed, but this mod offers a generic solution should should work for most use cases.-
+- Ashlands introduces randomized rotation, so using the lines tool changes the orientation after planting a line. This is quite annoying and I'd like to address it in future.
 
 Changelog:
+
+1.4.1
+
+Readme updates for 1.4.0
+
+1.4.0
+
+Ashlands compatability update
 
 1.3.0
 

@@ -16,7 +16,7 @@ namespace NPR_Valheim_ModUtils
     {
         public const string PLUGIN_GUID = "com.nopetrides.valheim.mod-utils";
         public const string PLUGIN_NAME = "NPR_ValheimModUtils";
-        public const string PLUGIN_VERSION = "1.0.0";
+        public const string PLUGIN_VERSION = "1.2.0";
         public const string VALHEIM_EXE_NAME = "valheim.exe";
         internal const string LoggerName = "ModUtilsManagerLog";
         public const string ROOT_GO_NAME = "_ModUtilsRoot";
@@ -176,28 +176,31 @@ namespace NPR_Valheim_ModUtils
         private void InitialLoad(Scene scene, LoadSceneMode loadMode)
         {
             Log.LogInfo("Processing Initial Load");
-            try
+            if (scene.name == "start" || scene.name == "main")
             {
-                // Prepare fonts for use
-                Font[] fontResources = Resources.FindObjectsOfTypeAll<Font>();
-                AveriaSerif = fontResources.FirstOrDefault((Font x) => x.name == "AveriaSerifLibre-Regular");
-                AveriaSerifBold = fontResources.FirstOrDefault((Font x) => x.name == "AveriaSerifLibre-Bold");
-                if (AveriaSerifBold == null || AveriaSerif == null)
+                try
                 {
-                    throw new Exception("Fonts not found");
+                    // Prepare fonts for use
+                    Font[] fontResources = Resources.FindObjectsOfTypeAll<Font>();
+                    AveriaSerif = fontResources.FirstOrDefault((Font x) => x.name == "AveriaSerifLibre-Regular");
+                    AveriaSerifBold = fontResources.FirstOrDefault((Font x) => x.name == "AveriaSerifLibre-Bold");
+                    if (AveriaSerifBold == null || AveriaSerif == null)
+                    {
+                        throw new Exception("Fonts not found");
+                    }
+                    else
+                    {
+                        Log.LogInfo("Fonts loaded");
+                    }
                 }
-                else
+                catch (Exception data)
                 {
-                    Log.LogInfo("Fonts loaded");
+                    Log.LogError(data);
                 }
-            }
-            catch (Exception data)
-            {
-                Log.LogError(data);
-            }
-            finally
-            {
-                SceneManager.sceneLoaded -= InitialLoad;
+                finally
+                {
+                    SceneManager.sceneLoaded -= InitialLoad;
+                }
             }
         }
 

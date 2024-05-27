@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "EIMzEhmdAfukWULIhRMFY4TpYzjXg1x0euGvTMMYcmk3Y0KvIbeiJK3AbHZd40BBY6pJh3XXfpMWp/sIQ6uf5g==",
+  "dgSpecHash": "r09hVfUjz5g=",
   "success": true,
-  "projectFilePath": "D:\\Programming\\modding\\ValheimMods\\Crop_Utils\\Crop_Utils.csproj",
+  "projectFilePath": "G:\\Programming\\modding\\ValheimMods\\Crop_Utils\\Crop_Utils.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\nopet\\.nuget\\packages\\bepinex.analyzers\\1.0.8\\bepinex.analyzers.1.0.8.nupkg.sha512",
     "C:\\Users\\nopet\\.nuget\\packages\\bepinex.baselib\\5.4.20\\bepinex.baselib.5.4.20.nupkg.sha512",

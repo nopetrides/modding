@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Programming\\modding\\ValheimMods\\Something_Nearby\\Something_Nearby.csproj": {}
+    "G:\\Programming\\modding\\ValheimMods\\Something_Nearby\\Something_Nearby.csproj": {}
   },
   "projects": {
-    "D:\\Programming\\modding\\ValheimMods\\Something_Nearby\\Something_Nearby.csproj": {
+    "G:\\Programming\\modding\\ValheimMods\\Something_Nearby\\Something_Nearby.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Programming\\modding\\ValheimMods\\Something_Nearby\\Something_Nearby.csproj",
+        "projectUniqueName": "G:\\Programming\\modding\\ValheimMods\\Something_Nearby\\Something_Nearby.csproj",
         "projectName": "Something_Nearby",
-        "projectPath": "D:\\Programming\\modding\\ValheimMods\\Something_Nearby\\Something_Nearby.csproj",
+        "projectPath": "G:\\Programming\\modding\\ValheimMods\\Something_Nearby\\Something_Nearby.csproj",
         "packagesPath": "C:\\Users\\nopet\\.nuget\\packages\\",
-        "outputPath": "D:\\Programming\\modding\\ValheimMods\\Something_Nearby\\obj\\",
+        "outputPath": "G:\\Programming\\modding\\ValheimMods\\Something_Nearby\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "D:\\Programming\\modding\\ValheimMods\\Something_Nearby\\NuGet.Config",
+          "G:\\Programming\\modding\\ValheimMods\\Something_Nearby\\NuGet.Config",
           "C:\\Users\\nopet\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -36,6 +36,11 @@
           "warnAsError": [
             "NU1605"
           ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -66,7 +71,7 @@
               "version": "[2020.3.33, )"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.413\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.204\\RuntimeIdentifierGraph.json"
         }
       }
     }

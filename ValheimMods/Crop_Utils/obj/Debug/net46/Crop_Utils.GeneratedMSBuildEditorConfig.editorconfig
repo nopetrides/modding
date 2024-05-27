@@ -1,3 +1,5 @@
 is_global = true
 build_property.RootNamespace = Crop_Utils
-build_property.ProjectDir = D:\Programming\modding\ValheimMods\Crop_Utils\
+build_property.ProjectDir = G:\Programming\modding\ValheimMods\Crop_Utils\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 

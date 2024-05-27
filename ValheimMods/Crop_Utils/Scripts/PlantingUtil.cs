@@ -556,7 +556,6 @@ namespace Crop_Utils
             if (!DidGhostsBuild(__instance, plantGrowthRadius))
             {
                 SetGhostsActive(false);
-                CropUtils.Log.LogError("Failed to build Ghosts");
                 return;
             }
 

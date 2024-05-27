@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "VPGvFkee1Q6hpZQXmmWcWpU8cyNbfsCTaXsW00cHYEp1B/+DF0A+Eg2azk4t9auwspie3R1qHZJVMWdIpAgVzg==",
+  "dgSpecHash": "wzi+3lDpYO3zQiTqV4NfRIIeD40Xzx8zXvQM6TrtoX9sWekt6GvlwlJQbkLWQd8a46CekEvolW6E3p+oXxarkQ==",
   "success": true,
-  "projectFilePath": "D:\\Programming\\modding\\ValheimMods\\Something_Nearby\\Something_Nearby.csproj",
+  "projectFilePath": "G:\\Programming\\modding\\ValheimMods\\Something_Nearby\\Something_Nearby.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\nopet\\.nuget\\packages\\bepinex.analyzers\\1.0.8\\bepinex.analyzers.1.0.8.nupkg.sha512",
     "C:\\Users\\nopet\\.nuget\\packages\\bepinex.baselib\\5.4.20\\bepinex.baselib.5.4.20.nupkg.sha512",

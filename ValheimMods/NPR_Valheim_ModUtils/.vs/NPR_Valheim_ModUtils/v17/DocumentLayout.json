@@ -1,0 +1,104 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{2B805BE7-0C31-4783-873D-FCD58BA03AE1}|NPR_Valheim_ModUtils.csproj|g:\\programming\\modding\\valheimmods\\npr_valheim_modutils\\thunderstore\\manifest.json||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{2B805BE7-0C31-4783-873D-FCD58BA03AE1}|NPR_Valheim_ModUtils.csproj|solutionrelative:thunderstore\\manifest.json||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2B805BE7-0C31-4783-873D-FCD58BA03AE1}|NPR_Valheim_ModUtils.csproj|g:\\programming\\modding\\valheimmods\\npr_valheim_modutils\\extensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2B805BE7-0C31-4783-873D-FCD58BA03AE1}|NPR_Valheim_ModUtils.csproj|solutionrelative:extensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2B805BE7-0C31-4783-873D-FCD58BA03AE1}|NPR_Valheim_ModUtils.csproj|g:\\programming\\modding\\valheimmods\\npr_valheim_modutils\\scripts\\patches.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2B805BE7-0C31-4783-873D-FCD58BA03AE1}|NPR_Valheim_ModUtils.csproj|solutionrelative:scripts\\patches.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2B805BE7-0C31-4783-873D-FCD58BA03AE1}|NPR_Valheim_ModUtils.csproj|g:\\programming\\modding\\valheimmods\\npr_valheim_modutils\\modutilsmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2B805BE7-0C31-4783-873D-FCD58BA03AE1}|NPR_Valheim_ModUtils.csproj|solutionrelative:modutilsmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\obj\\debug\\net46\\plugininfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:obj\\debug\\net46\\plugininfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "manifest.json",
+              "DocumentMoniker": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\Thunderstore\\manifest.json",
+              "RelativeDocumentMoniker": "Thunderstore\\manifest.json",
+              "ToolTip": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\Thunderstore\\manifest.json",
+              "RelativeToolTip": "Thunderstore\\manifest.json",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAgAAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2024-05-26T20:40:35.808Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Patches.cs",
+              "DocumentMoniker": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\Scripts\\Patches.cs",
+              "RelativeDocumentMoniker": "Scripts\\Patches.cs",
+              "ToolTip": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\Scripts\\Patches.cs",
+              "RelativeToolTip": "Scripts\\Patches.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABAAAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-05-26T17:52:23.164Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Extensions.cs",
+              "DocumentMoniker": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\Extensions.cs",
+              "RelativeDocumentMoniker": "Extensions.cs",
+              "ToolTip": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\Extensions.cs",
+              "RelativeToolTip": "Extensions.cs",
+              "ViewState": "AQIAAAkAAAAAAAAAAAAAABAAAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-05-26T17:52:23.189Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ModUtilsManager.cs",
+              "DocumentMoniker": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\ModUtilsManager.cs",
+              "RelativeDocumentMoniker": "ModUtilsManager.cs",
+              "ToolTip": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\ModUtilsManager.cs",
+              "RelativeToolTip": "ModUtilsManager.cs",
+              "ViewState": "AQIAAAYAAAAAAAAAAAAAABYAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-05-26T17:52:23.194Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "PluginInfo.cs",
+              "DocumentMoniker": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\obj\\Debug\\net46\\PluginInfo.cs",
+              "RelativeDocumentMoniker": "obj\\Debug\\net46\\PluginInfo.cs",
+              "ToolTip": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\obj\\Debug\\net46\\PluginInfo.cs",
+              "RelativeToolTip": "obj\\Debug\\net46\\PluginInfo.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAQAAABBAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001481|",
+              "WhenOpened": "2024-05-26T17:52:23.192Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

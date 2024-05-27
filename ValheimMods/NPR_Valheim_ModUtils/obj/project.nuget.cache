@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "bFQ+49l0RWBxKExg+S2Yc/r8OeCjyUk033BqNsN1ziRyIIT4FwTR3TMhS6c6213bF0UwLiON68XvlAu/aREqYw==",
+  "dgSpecHash": "cOM9FRi9E10=",
   "success": true,
-  "projectFilePath": "D:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\NPR_Valheim_ModUtils.csproj",
+  "projectFilePath": "G:\\Programming\\modding\\ValheimMods\\NPR_Valheim_ModUtils\\NPR_Valheim_ModUtils.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\nopet\\.nuget\\packages\\bepinex.analyzers\\1.0.8\\bepinex.analyzers.1.0.8.nupkg.sha512",
     "C:\\Users\\nopet\\.nuget\\packages\\bepinex.baselib\\5.4.20\\bepinex.baselib.5.4.20.nupkg.sha512",

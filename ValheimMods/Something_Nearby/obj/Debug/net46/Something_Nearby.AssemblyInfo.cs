@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("BepInEx 5")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d156f2a212104760baf64470c6c7a2efdfcaa7bb")]
 [assembly: System.Reflection.AssemblyProductAttribute("Something_Nearby")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Something_Nearby")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

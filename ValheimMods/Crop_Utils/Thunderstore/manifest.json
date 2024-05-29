@@ -4,6 +4,6 @@
     "website_url": "https://github.com/nopetrides/modding/tree/main/ValheimMods/Crop_Utils",
     "description": "More efficient than a grid! Plant more crops at once with triangle packing or in rows that respect healthy plant distancing. Pick crops in an area with one interaction. Highly configurable.",
     "dependencies": [
-        "denikson-BepInExPack_Valheim-5.4.2202",
+        "denikson-BepInExPack_Valheim-5.4.2202"
     ]
 }

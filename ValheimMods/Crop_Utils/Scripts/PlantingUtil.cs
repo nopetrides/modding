@@ -288,29 +288,33 @@ namespace Crop_Utils
             {
                 _lastPlayerGhostPosition = originPos.position;
                 _lastPlantedPosition = LinePlantPositions(originPos, plantGrowthRadius);
+                UpdatePlayerGhostState(originPos, plantGrowthRadius);
                 return _lastPlantedPosition;
             }
         }
 
         /// <summary>
-        /// Make sure the placment state is correct it's state is correct
+        /// Make sure the placment state is correct
         /// </summary>
         /// <param name="originGhost"></param>
         private static void UpdatePlayerGhostState(Transform originGhost, float plantGrowthRadius)
         {
             bool invalidPlacementHighlight = false;
             // This is the grow check that the game does not do preemptively
-            if (Input.GetKey(CropUtils.Instance.UtilControllerButton.MainKey) ||
-                Input.GetKey(CropUtils.Instance.UtilHotKey.MainKey))
-            {
-                if (!HasGrowSpace(originGhost.position, plantGrowthRadius))
-                {
-                    invalidPlacementHighlight = true;
-                    originGhost.GetComponent<Piece>().SetInvalidPlacementHeightlight(invalidPlacementHighlight);
-                }
-            }
 
-            // Only check this if we are in the "locked" state, don't bother if we already know its invalid
+            /*if (Input.GetKey(CropUtils.Instance.UtilControllerButton.MainKey) ||
+                Input.GetKey(CropUtils.Instance.UtilHotKey.MainKey))
+            {*/
+            if (!HasGrowSpace(originGhost.position, plantGrowthRadius))
+            {
+                invalidPlacementHighlight = true;
+                originGhost.GetComponent<Piece>().SetInvalidPlacementHeightlight(invalidPlacementHighlight);
+            }
+            //}
+            // Early out if failed check
+            if (invalidPlacementHighlight) return;
+
+            // Only check this if we are in the "locked" state
             if (!invalidPlacementHighlight &&
             Input.GetKey(CropUtils.Instance.UtilAltControllerButton.MainKey) ||
             Input.GetKey(CropUtils.Instance.UtilAltHotKey.MainKey))

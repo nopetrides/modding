@@ -30,9 +30,6 @@
     <Reference Include="assembly_valheim">
       <HintPath>D:\Steam\steamapps\common\Valheim\valheim_Data\Managed\publicized_assemblies\assembly_valheim_publicized.dll</HintPath>
     </Reference>
-    <Reference Include="NPR_Valheim_ModUtils">
-      <HintPath>..\NPR_Valheim_ModUtils\bin\Debug\net46\NPR_Valheim_ModUtils.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>D:\Steam\steamapps\common\Valheim\valheim_Data\Managed\publicized_assemblies\UnityEngine.UI_publicized.dll</HintPath>
     </Reference>

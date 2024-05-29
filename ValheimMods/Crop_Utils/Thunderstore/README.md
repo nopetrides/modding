@@ -1,4 +1,4 @@
-# CropUtils v 1.4.1
+# CropUtils v 1.4.2
 
 Inspired by MassFarming by Xeio, but uses more efficient triangle packing for optimal placement as well as harvesting a large area at once.
 
@@ -14,9 +14,11 @@ Planting will skip any invalid plant locations, so you can use this to fill in a
 Usable entirely on client, even in multiplayer - though if in MP, you should probably get permission from the admin to use.
 Dedicated servers do not need this installed.
 
-Dependant on BepInEx (https://valheim.thunderstore.io/package/denikson/BepInExPack_Valheim/) and my own mod library (https://github.com/nopetrides/modding/tree/main/ValheimMods/NPR_Valheim_ModUtils) which contains a lightweight version of Jotunn inspired functionality.
+Dependant on BepInEx (https://valheim.thunderstore.io/package/denikson/BepInExPack_Valheim/)
 
-See config for all configurables, and change at your leasuire.
+See config for all configurables, and change at your leasuire. 
+
+Tested with some mods that add additional plants but compatability not guarenteed.
 
 Default keybinds:
   - Pickup: While looking at a pick-able item, hold left ALT to pickup in an area 
@@ -42,6 +44,14 @@ Limitations:
 - Ashlands introduces randomized rotation, so using the lines tool changes the orientation after planting a line. This is quite annoying and I'd like to address it in future.
 
 Changelog:
+
+1.4.2
+
+Adjusted ghost previews.
+
+Removed NoPetRides_ModUtils dependency. ModUtils is my own library mod for any shared functionality between mods, like on screen text. However, I never ended up adding GUI elements for CropUtils or any other shared functionality with other mods, so it was redundant [as serpi90 pointed out here](https://github.com/nopetrides/modding/issues/7).
+
+If I make more mods and they have duplicate code, I may add the dependency back and put duplicated code in there, but perhaps I could solve the problem with submodules or similar.
 
 1.4.1
 

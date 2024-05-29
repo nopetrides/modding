@@ -20,9 +20,7 @@ G:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\Crop_Utils.pdb
 G:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\assembly_guiutils_publicized.dll
 G:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\assembly_utils_publicized.dll
 G:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\assembly_valheim_publicized.dll
-G:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\NPR_Valheim_ModUtils.dll
 G:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\UnityEngine.UI_publicized.dll
-G:\Programming\modding\ValheimMods\Crop_Utils\bin\Debug\net46\NPR_Valheim_ModUtils.pdb
 G:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.csproj.AssemblyReference.cache
 G:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\PluginInfo.cs
 G:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.GeneratedMSBuildEditorConfig.editorconfig

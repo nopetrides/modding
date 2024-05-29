@@ -13,14 +13,13 @@ namespace Crop_Utils
     /// </summary>
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     [BepInProcess(VALHEIM_EXE_NAME)]
-    [BepInDependency("com.nopetrides.valheim.mod-utils")]
     internal class CropUtils : BaseUnityPlugin
     {
         public static CropUtils Instance;
 
         public const string PluginGUID = "com.nopetrides.valheim.crop-utils";
         public const string PluginName = "Crop Utils";
-        public const string PluginVersion = "1.4.1";
+        public const string PluginVersion = "1.4.2";
         public const string VALHEIM_EXE_NAME = "valheim.exe";
         internal const string LoggerName = "CropUtilsLog";
 

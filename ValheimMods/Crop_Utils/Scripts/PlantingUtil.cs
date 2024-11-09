@@ -29,7 +29,7 @@ namespace Crop_Utils
             "Default_small",
             "piece",
             "piece_nonsolid"
-        }); 
+        });
         /// <summary>
         /// A placeholder piece used when doing other operations
         /// </summary>
@@ -97,7 +97,7 @@ namespace Crop_Utils
         /// <param name="__result">Did the player successfully place the item</param>
         /// <param name="piece">What item got placed</param>
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(Player), "PlacePiece")]
+        [HarmonyPatch(typeof(Player), "TryPlacePiece")]
         public static void PlacePiecePostFix(Player __instance, ref bool __result, Piece piece)
         {
             _placed = __result;

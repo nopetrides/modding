@@ -19,7 +19,7 @@ namespace Crop_Utils
 
         public const string PluginGUID = "com.nopetrides.valheim.crop-utils";
         public const string PluginName = "Crop Utils";
-        public const string PluginVersion = "1.4.2";
+        public const string PluginVersion = "1.5.0";
         public const string VALHEIM_EXE_NAME = "valheim.exe";
         internal const string LoggerName = "CropUtilsLog";
 

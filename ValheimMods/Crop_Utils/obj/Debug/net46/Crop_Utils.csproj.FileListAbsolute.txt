@@ -28,6 +28,6 @@ G:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.Assembl
 G:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.AssemblyInfo.cs
 G:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.csproj.CoreCompileInputs.cache
 G:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.sourcelink.json
-G:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.csproj.Up2Date
 G:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.dll
 G:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.pdb
+G:\Programming\modding\ValheimMods\Crop_Utils\obj\Debug\net46\Crop_Utils.csproj.Up2Date

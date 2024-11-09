@@ -1,4 +1,4 @@
-# CropUtils v 1.4.2
+# CropUtils v 1.5.0
 
 Inspired by MassFarming by Xeio, but uses more efficient triangle packing for optimal placement as well as harvesting a large area at once.
 
@@ -18,7 +18,7 @@ Dependant on BepInEx (https://valheim.thunderstore.io/package/denikson/BepInExPa
 
 See config for all configurables, and change at your leasuire. 
 
-Tested with some mods that add additional plants but compatability not guarenteed.
+Tested with some mods that add additional plants but compatibility not guarenteed.
 
 # Default keybinds:
 
@@ -42,11 +42,15 @@ Tested with some mods that add additional plants but compatability not guarentee
 	- Hex grid does not align with rotation like line tool does. I'd like to fix that in future.
 	- In order for hex grid to not cause lag when displaying ghosts, it has to be locked in place while it builds. The line tool does not, though perfomance will suffer with very high ranges.
 	- Will cause a bunch of lag when planting very large patterns.
-	- Mod compatability is not guaranteed, but this mod offers a generic solution should should work for most use cases.-
+	- Mod compatibility is not guaranteed, but this mod offers a generic solution should should work for most use cases.-
 	- Ashlands introduces randomized rotation, so using the lines tool changes the orientation after planting a line. This is quite annoying and I'd like to address it in future.
 	- Locking the shape with an invalid origin, then looking away may let you place the first plant even if it shows as invalid. All other plants should correctly respect the preview, only planting if they are valid.
 
 # Changelog:
+
+1.5.0
+
+The Bog Witch compatibility update
 
 1.4.2
 
@@ -66,11 +70,11 @@ Readme updates for 1.4.0
 
 1.4.0
 
-Ashlands compatability update
+Ashlands compatibility update
 
 1.3.0
 
-Hildir compatability update
+Hildir compatibility update
 
 1.2.1
 
@@ -78,11 +82,11 @@ Readme updates for 1.2.0
 
 1.2.0
 
-Mod compatibilty settings.
+Mod compatibility settings.
 The mod should now support other crop and planting mods that utilize the cultivator to plant other crops, such as PlantEverything.
-To use this mod with other mods, enable "Mod Compatability Mode" (IgnorePlantTypeRestriction) in the config file (run the game at least once with the mod installed to generate the config.) to plant any kind of plantable you have access too.
+To use this mod with other mods, enable "Mod compatibility Mode" (IgnorePlantTypeRestriction) in the config file (run the game at least once with the mod installed to generate the config.) to plant any kind of plantable you have access too.
 
-Mod compatability uses custom spacing to allow you to set the spacing to use for various custom mod growables.
+Mod compatibility uses custom spacing to allow you to set the spacing to use for various custom mod growables.
 Optionally, you can also enable "Custom Spacing Only" if you have mods that override the default crop growth spacing or that disable it completely.
 
 It's important to note that the custom spacing is only for the cultivator tool's placement, and will not influence the growth of the plant. Whatever the plant's growth radius is will remain and is unaffected by this mod. If for some aethestic reason you wish to have custom spacing, simply ensure that the custom spacing is at least the minimum required for the plant.

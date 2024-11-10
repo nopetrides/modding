@@ -225,12 +225,25 @@ namespace Crop_Utils
                 _placedPiece.m_placeEffect.Create(plantPosition, _placedRotation, newPlant.transform, 1f, -1);
 
                 Game.instance.GetPlayerProfile().m_playerStats[PlayerStatType.Builds]++;
-                    __instance.ConsumeResources(_placedPiece.m_resources, 0);
+                try
+                {
+                    __instance.ConsumeResources(_placedPiece.m_resources, 0, 1);
+                }
+                catch (System.Exception e)
+                {
+                    CropUtils.Log.LogError($"[PlaceNextFrame] Player.ConsumeResources failed with {e.Message}");
+                }
+                try
+                {
                     __instance.UseStamina(staminaCost);
-
-                    //CropUtils.Log.LogInfo(7);
-                    // Remove tool durability
-                    if (equippedTool.m_shared.m_useDurability)
+                }
+                catch (System.Exception e)
+                {
+                    CropUtils.Log.LogError($"[PlaceNextFrame] Player.UseStamina failed with {e.Message}");
+                }
+                //CropUtils.Log.LogInfo(7);
+                // Remove tool durability
+                if (equippedTool.m_shared.m_useDurability)
                 {
                     equippedTool.m_durability -= durabilityCost;
                     if (equippedTool.m_durability <= 0f)

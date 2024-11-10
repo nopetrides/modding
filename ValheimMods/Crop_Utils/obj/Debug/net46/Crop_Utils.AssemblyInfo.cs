@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("A mod for helping with farming and gathering")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cce936d54abfc409cf15e75e6b93824c452f3957")]
 [assembly: System.Reflection.AssemblyProductAttribute("Crop_Utils")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Crop_Utils")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

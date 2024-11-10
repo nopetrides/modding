@@ -1,4 +1,4 @@
-# CropUtils v 1.5.0
+# CropUtils v 1.5.1
 
 Inspired by MassFarming by Xeio, but uses more efficient triangle packing for optimal placement as well as harvesting a large area at once.
 
@@ -47,6 +47,10 @@ Tested with some mods that add additional plants but compatibility not guarentee
 	- Locking the shape with an invalid origin, then looking away may let you place the first plant even if it shows as invalid. All other plants should correctly respect the preview, only planting if they are valid.
 
 # Changelog:
+
+1.5.1
+
+Fix for planting rows and pattern, Bog Witch update
 
 1.5.0
 

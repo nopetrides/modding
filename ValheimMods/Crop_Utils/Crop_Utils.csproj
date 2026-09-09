@@ -1,37 +1,76 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
+    <!-- Valheim 1.0 runs on Unity 6000.0.75f1, whose assemblies target netstandard2.1. -->
+    <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>Crop_Utils</AssemblyName>
     <Description>A mod for helping with farming and gathering</Description>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Override on the command line with -p:ValheimDir=... for a different install. -->
+    <ValheimDir Condition="'$(ValheimDir)' == ''">J:\SteamGames\steamapps\common\Valheim</ValheimDir>
+    <ValheimManaged>$(ValheimDir)\valheim_Data\Managed</ValheimManaged>
+    <ValheimPublicized>$(ValheimManaged)\publicized_assemblies</ValheimPublicized>
+  </PropertyGroup>
+
+  <Target Name="CheckValheimReferences" BeforeTargets="BeforeBuild">
+    <Error Condition="!Exists('$(ValheimPublicized)\assembly_valheim_publicized.dll')"
+           Text="Publicized assemblies not found at '$(ValheimPublicized)'. Run AssemblyPublicizer.exe on assembly_valheim.dll, assembly_utils.dll, assembly_guiutils.dll and UnityEngine.UI.dll in '$(ValheimManaged)', or set -p:ValheimDir=&lt;install path&gt;." />
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.*" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
-    <PackageReference Include="UnityEngine.Modules" Version="2020.3.33" IncludeAssets="compile" />
   </ItemGroup>
-  
-  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
-  </ItemGroup>
-  
+
+  <!-- Publicized copies of the game assemblies the mod patches into. -->
   <ItemGroup>
-    <Reference Include="assembly_guiutils">
-      <HintPath>D:\Steam\steamapps\common\Valheim\valheim_Data\Managed\publicized_assemblies\assembly_guiutils_publicized.dll</HintPath>
+    <Reference Include="assembly_valheim">
+      <HintPath>$(ValheimPublicized)\assembly_valheim_publicized.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="assembly_utils">
-      <HintPath>D:\Steam\steamapps\common\Valheim\valheim_Data\Managed\publicized_assemblies\assembly_utils_publicized.dll</HintPath>
+      <HintPath>$(ValheimPublicized)\assembly_utils_publicized.dll</HintPath>
+      <Private>false</Private>
     </Reference>
-    <Reference Include="assembly_valheim">
-      <HintPath>D:\Steam\steamapps\common\Valheim\valheim_Data\Managed\publicized_assemblies\assembly_valheim_publicized.dll</HintPath>
+    <Reference Include="assembly_guiutils">
+      <HintPath>$(ValheimPublicized)\assembly_guiutils_publicized.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>D:\Steam\steamapps\common\Valheim\valheim_Data\Managed\publicized_assemblies\UnityEngine.UI_publicized.dll</HintPath>
+      <HintPath>$(ValheimPublicized)\UnityEngine.UI_publicized.dll</HintPath>
+      <Private>false</Private>
     </Reference>
   </ItemGroup>
+
+  <!--
+    Everything else comes straight out of the game's Managed folder so the Unity version
+    always matches the installed build. BCL assemblies are excluded because netstandard2.1
+    reference assemblies from the SDK supply those, and the four assemblies referenced
+    above are excluded so the unpublicized originals don't shadow them.
+  -->
+  <ItemGroup>
+    <ValheimAssembly Include="$(ValheimManaged)\*.dll"
+                     Exclude="$(ValheimManaged)\mscorlib.dll;
+                              $(ValheimManaged)\netstandard.dll;
+                              $(ValheimManaged)\System.dll;
+                              $(ValheimManaged)\System.*.dll;
+                              $(ValheimManaged)\Mono.*.dll;
+                              $(ValheimManaged)\UnityEngine.UI.dll;
+                              $(ValheimManaged)\assembly_valheim.dll;
+                              $(ValheimManaged)\assembly_utils.dll;
+                              $(ValheimManaged)\assembly_guiutils.dll" />
+    <!-- %(Identity) here is the transformed name, e.g. "UnityEngine.CoreModule". Do not use
+         %(Filename): it would treat ".CoreModule" as the extension and strip it. -->
+    <Reference Include="@(ValheimAssembly->'%(Filename)')">
+      <HintPath>$(ValheimManaged)\%(Identity).dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
 </Project>

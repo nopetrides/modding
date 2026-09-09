@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Splatform;
 using UnityEngine;
 using static ItemDrop;
 using Object = UnityEngine.Object;
@@ -30,6 +31,7 @@ namespace Crop_Utils
             "piece",
             "piece_nonsolid"
         });
+
         /// <summary>
         /// A placeholder piece used when doing other operations
         /// </summary>
@@ -167,6 +169,10 @@ namespace Crop_Utils
             float staminaCost = equippedTool.m_shared.m_attack.m_attackStamina / CropUtils.Instance.Discount;
             float durabilityCost = equippedTool.m_shared.m_attack.m_attackStamina / CropUtils.Instance.Discount;
 
+            // Matches how Player.TryPlacePiece flags a placement as cheated before recording stats
+            bool cheated = (__instance.m_inventory.ItemCheated(_placedPiece.m_resources) ||
+                            Player.m_localPlayer.NoCostCheat()) && !PlayerProfile.s_bypassCheatChecks;
+
             foreach (Vector3 plantPosition in newPlantPositions)
             {
                 #if LOGGING
@@ -195,36 +201,45 @@ namespace Crop_Utils
                     #endif
                     break;
                 }
+
                 //CropUtils.Log.LogInfo(3);
-                if (!(bool)_noPlacementCostField.GetValue(__instance) && !__instance.HaveRequirements(_placedPiece, 0))
+
+                if (!(bool)_noPlacementCostField.GetValue(__instance) && !__instance.HaveRequirements(_placedPiece, Player.RequirementMode.CanBuild))
                 {
-                    #if LOGGING
+#if LOGGING
                     CropUtils.Log.LogInfo("Did not plant: Missing Required Items");
-                    #endif
+#endif
                     break;
                 }
+
                 //CropUtils.Log.LogInfo(4);
+
                 if (!HasGrowSpace(plantPosition, plantGrowthRadius))
                 {
-                    #if LOGGING
+#if LOGGING
                     CropUtils.Log.LogInfo("Did not plant: Not enough space");
-                    #endif
+#endif
                     continue;
                 }
+
                 //CropUtils.Log.LogInfo(5);
+
                 plantSuccesses++;
                 GameObject newPlant = Object.Instantiate(_placedPiece.gameObject, plantPosition, _placedRotation);
                 Piece newPlantPiece = newPlant.GetComponent<Piece>();
                 if (newPlantPiece)
                 {
-                    newPlantPiece.SetCreator(__instance.GetPlayerID());
+                    newPlantPiece.SetCreator(__instance.GetPlayerID(),
+                        PlatformManager.DistributionPlatform.LocalUser.PlatformUserID);
                     newPlantPiece.SetInvalidPlacementHeightlight(false);
                 }
+
                 //CropUtils.Log.LogInfo(6);
+
                 // Play placement vfx
                 _placedPiece.m_placeEffect.Create(plantPosition, _placedRotation, newPlant.transform, 1f, -1);
 
-                Game.instance.GetPlayerProfile().m_playerStats[PlayerStatType.Builds]++;
+                Game.instance.IncrementPlayerStat(PlayerStatType.Builds, 1f, cheated);
                 try
                 {
                     __instance.ConsumeResources(_placedPiece.m_resources, 0, 1);
@@ -521,26 +536,38 @@ namespace Crop_Utils
         [HarmonyPatch(typeof(Player), "UpdatePlacementGhost")]
         public static void UpdatePlacementGhostPostfix(Player __instance, bool flashGuardStone)
         {
+#if LOGGING
+            CropUtils.Log.LogWarning("UpdatePlacementGhostPostfix Enter");
+            CropUtils.Log.LogWarning("1");
+#endif
             GameObject gameObject = (GameObject)_placementGhostField.GetValue(__instance);
+#if LOGGING
+            CropUtils.Log.LogWarning("2");
+#endif
             if (!gameObject || !gameObject.activeSelf)
             {
                 SetGhostsActive(false);
-                #if LOGGING
+#if LOGGING
                 CropUtils.Log.LogWarning("No game object in placement field.");
-                #endif
+#endif
                 return;
             }
+#if LOGGING
+            CropUtils.Log.LogWarning("3");
+#endif
             if (!Input.GetKey(CropUtils.Instance.UtilControllerButton.MainKey) &&
                 !Input.GetKey(CropUtils.Instance.UtilHotKey.MainKey))
             {
                 _lastPlantedPosition = null;
                 SetGhostsActive(false);
-                #if LOGGING
+#if LOGGING
                 CropUtils.Log.LogWarning("No hotkey pressed.");
-                #endif
+#endif
                 return;
             }
-
+#if LOGGING
+            CropUtils.Log.LogWarning("4");
+#endif
             // Allow for spacing adjustment while in this mode
             if (Input.GetKeyDown(CropUtils.Instance.IncreaseSpacingHotKey.MainKey))
             {
@@ -550,13 +577,17 @@ namespace Crop_Utils
             {
                 CropUtils.Instance.ChangeSpacing(-0.1f);
             }
-
+#if LOGGING
+            CropUtils.Log.LogWarning("5");
+#endif
             float plantGrowthRadius = TryFindPlantGrowthRadius(gameObject);
             if (plantGrowthRadius <= 0)
             {
                 return;
             }
-
+#if LOGGING
+            CropUtils.Log.LogWarning("6");
+#endif
             // Allow for distance adjustment while in this mode
             if (Input.GetKeyDown(CropUtils.Instance.IncreaseRangeControllerButton.MainKey) || 
                 Input.GetKeyDown(CropUtils.Instance.IncreaseRangeHotKey.MainKey))
@@ -568,25 +599,34 @@ namespace Crop_Utils
             {
                 CropUtils.Instance.ChangeRange(-1);
             }
-
+#if LOGGING
+            CropUtils.Log.LogWarning("7");
+#endif
             // Ensure the ghosts list is ready
             if (!DidGhostsBuild(__instance, plantGrowthRadius))
             {
                 SetGhostsActive(false);
                 return;
             }
-
+#if LOGGING
+            CropUtils.Log.LogWarning("8");
+#endif
 
             // Do the actual ghost creation
-            Piece.Requirement requirement = gameObject.GetComponent<Piece>().m_resources.FirstOrDefault((Piece.Requirement r) => r.m_resItem && r.m_amount > 0);
-
+            Piece originalPiece = gameObject.GetComponent<Piece>();
+            Piece.Requirement requirement = originalPiece.m_resources.FirstOrDefault((Piece.Requirement r) => r.m_resItem && r.m_amount > 0);
+#if LOGGING
+            CropUtils.Log.LogWarning("9");
+#endif
             _fakeResourcePiece.m_resources[0].m_resItem = requirement.m_resItem;
             _fakeResourcePiece.m_resources[0].m_amount = requirement.m_amount;
             float availableStamina = __instance.GetStamina();
             ItemDrop.ItemData equippedTool = __instance.GetRightItem();
             List<Vector3> list = BuildPlantingPositions(gameObject.transform, plantGrowthRadius);
-
-            //CropUtils.Log.LogInfo($"Placing {_placementGhosts.Length} to {list.Count} positions");
+#if LOGGING
+            CropUtils.Log.LogWarning("10"); 
+            CropUtils.Log.LogInfo($"Placing {_placementGhosts.Length} to {list.Count} positions");
+#endif
             for (int i = 0; i < _placementGhosts.Length && i < list.Count; i++)
             {
                 Vector3 ghostPosition = list[i];
@@ -602,6 +642,9 @@ namespace Crop_Utils
                     _placementGhosts[i].SetActive(true);
                     bool invalidPlacementHighlight = false;
                     Heightmap heightmap = Heightmap.FindHeightmap(ghostPosition);
+#if LOGGING
+                    CropUtils.Log.LogWarning($"ghost {i} placing");
+#endif
                     if (gameObject.GetComponent<Piece>().m_cultivatedGroundOnly && !heightmap.IsCultivated(ghostPosition))
                     {
                         invalidPlacementHighlight = true;
@@ -615,7 +658,7 @@ namespace Crop_Utils
                         Hud.instance.StaminaBarEmptyFlash();
                         invalidPlacementHighlight = true;
                     }
-                    else if (!(bool)_noPlacementCostField.GetValue(__instance) && !__instance.HaveRequirements(_fakeResourcePiece, 0))
+                    else if (!(bool)_noPlacementCostField.GetValue(__instance) && !__instance.HaveRequirements(originalPiece, Player.RequirementMode.CanBuild))
                     {
                         invalidPlacementHighlight = true;
                     }
@@ -807,9 +850,9 @@ namespace Crop_Utils
             Plant plantComp = objectToGrow.GetComponent<Plant>();
             if (!plantComp)
             {
-                #if LOGGING
+#if LOGGING
                 CropUtils.Log.LogWarning("Unsupported - trying to place an item that is not a <Plant>");
-                #endif
+#endif
                 if (CropUtils.Instance.AllowPlantAnything)
                 {
                     return plantGrowthRadius;

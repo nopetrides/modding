@@ -1,4 +1,4 @@
-# CropUtils v 1.5.1
+# CropUtils v 2.0.0
 
 Inspired by MassFarming by Xeio, but uses more efficient triangle packing for optimal placement as well as harvesting a large area at once.
 
@@ -47,6 +47,14 @@ Tested with some mods that add additional plants but compatibility not guarentee
 	- Locking the shape with an invalid origin, then looking away may let you place the first plant even if it shows as invalid. All other plants should correctly respect the preview, only planting if they are valid.
 
 # Changelog:
+
+2.0.0
+
+The Valheim 1.0 update. Valheim 1.0 moved the game to Unity 6, so this release **requires BepInExPack_Valheim 5.4.2350 or newer** and will not load on older packs. Two game APIs changed and are updated to match: `Piece.SetCreator` now takes a platform user ID, and build stats moved to `Game.IncrementPlayerStat`. Also includes the previously unreleased 1.5.2 fix below.
+
+1.5.2
+
+Fix for game patch 0.219.16. Something about Player.RequirementMode broke things
 
 1.5.1
 

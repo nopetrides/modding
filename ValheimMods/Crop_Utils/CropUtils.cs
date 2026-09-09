@@ -19,7 +19,7 @@ namespace Crop_Utils
 
         public const string PluginGUID = "com.nopetrides.valheim.crop-utils";
         public const string PluginName = "Crop Utils";
-        public const string PluginVersion = "2.0.0";
+        public const string PluginVersion = "2.0.1";
         public const string VALHEIM_EXE_NAME = "valheim.exe";
         internal const string LoggerName = "CropUtilsLog";
 
@@ -65,6 +65,9 @@ namespace Crop_Utils
         // Custom Spacing distance in Unity units (defaults 0.5f for crops and 2f for trees)
         private ConfigEntry<float> m_manualCropSpacing;
         public float CustomSpacing => m_manualCropSpacing.Value;
+        // Multiplier applied to m_growRadius when laying out the pattern
+        private ConfigEntry<float> m_growRadiusSpacingMultiplier;
+        public float GrowRadiusSpacingMultiplier => m_growRadiusSpacingMultiplier.Value;
 
         private ConfigEntry<KeyboardShortcut> m_increaseSpacingHotKey;
         public KeyboardShortcut IncreaseSpacingHotKey => m_increaseSpacingHotKey.Value;
@@ -124,27 +127,27 @@ namespace Crop_Utils
             m_increaseRangeControllerButton = Config.Bind("Util Range",
                 "Increase Range Key Gamepad",
                 new KeyboardShortcut(KeyCode.JoystickButton7, new KeyCode[0]),
-                new ConfigDescription("Gamepad button to increase the range of picking while holding the Utiity Key."));
+                new ConfigDescription("Gamepad button to increase the range of picking while holding the Utility Key."));
             // Also add a client side custom input key for the Hot Key
-            m_increaseRangeHotKey = Config.Bind("Utils Keys",
+            m_increaseRangeHotKey = Config.Bind("Util Keys",
                 "Increase Range Hot Key",
                 new KeyboardShortcut(KeyCode.RightBracket, new KeyCode[0]),
-                new ConfigDescription("Key to increase the range of picking while holding the Utiity Key."));
+                new ConfigDescription("Key to increase the range of picking while holding the Utility Key."));
 
             m_decreaseRangeControllerButton = Config.Bind("Util Range",
                 "Decrease Range Key Gamepad",
                 new KeyboardShortcut(KeyCode.JoystickButton6, new KeyCode[0]),
-                new ConfigDescription("Gamepad button to decrease the range of picking while holding the Utiity Key."));
+                new ConfigDescription("Gamepad button to decrease the range of picking while holding the Utility Key."));
             m_decreaseRangeHotKey = Config.Bind("Util Keys",
                 "Decrease Range Hot Key",
                new KeyboardShortcut(KeyCode.LeftBracket, new KeyCode[0]),
-                new ConfigDescription("Key to decrease the range of pickingwhile holding the Utiity Key."));
+                new ConfigDescription("Key to decrease the range of picking while holding the Utility Key."));
 
             m_utilControllerButton = Config.Bind("Util Keys",
                 "Utility Key Gamepad",
                new KeyboardShortcut(KeyCode.JoystickButton5, new KeyCode[0]),
                 new ConfigDescription("Button to enable farming utility helpers when planting or picking. Default behavior is pickup only this type and place in a line"));
-            m_utilHotKey = Config.Bind("Utils Keys",
+            m_utilHotKey = Config.Bind("Util Keys",
                 "Utility Hot Key",
                 new KeyboardShortcut(KeyCode.LeftAlt, new KeyCode[0]),
                 new ConfigDescription("Key to enable farming utility helpers when planting or picking. Default behavior is pickup only this type and place in a line"));
@@ -154,7 +157,7 @@ namespace Crop_Utils
                 new KeyboardShortcut(KeyCode.JoystickButton4, new KeyCode[0]),
                 new ConfigDescription("Button to enable farming utility helpers when planting or picking. Should pick any type of crop or use the radius placement for crops."));
             m_utilAltHotKey = Config.Bind("Util Keys",
-                "Utlity Alternative Hot Key",
+                "Utility Alternative Hot Key",
                 new KeyboardShortcut(KeyCode.Z, new KeyCode[0]),
                 new ConfigDescription("Key to enable farming utility helpers when planting or picking. Should pick any type of crop or use the radius placement for crops."));
             
@@ -164,11 +167,11 @@ namespace Crop_Utils
                20,
                new ConfigDescription("The divider for how much less stamina planting uses when using the util (stamina cost / 20) default"));
             
-            // Compatability mode (allow custom crops)
-            m_allowPlantAnything = Config.Bind("Mod Compatability Mode",
+            // Compatibility mode (allow custom crops)
+            m_allowPlantAnything = Config.Bind("Mod Compatibility Mode",
                 "IgnorePlantTypeRestriction",
                 false,
-                new ConfigDescription("Should the tool respect default Valheim plantable types, or try to plant anything? Set to true if using another plantable mod. Compatability is not guaranteed."));
+                new ConfigDescription("Should the tool respect default Valheim plantable types, or try to plant anything? Set to true if using another plantable mod. Compatibility is not guaranteed."));
 
             // Custom Crop Spacing controls
             m_alwaysUseCustomSpacing = Config.Bind("Custom Crop Spacing",
@@ -182,6 +185,16 @@ namespace Crop_Utils
                 new ConfigDescription(
                     "The distance (in Unity Units) to space plantables. Normal crops are 0.5, trees are 2.0",
                     new AcceptableValueRange<float>(.1f, 10f)));
+
+            m_growRadiusSpacingMultiplier = Config.Bind("Custom Crop Spacing",
+                "GrowRadiusSpacingMultiplier",
+                1.5f,
+                new ConfigDescription(
+                    "How far apart to space the pattern, as a multiple of the plant's grow radius. Valheim only needs " +
+                    "slightly more than one radius between plants, so values under 2.0 pack tighter than older versions " +
+                    "of this mod. If set too low for a given crop the grow space check rejects the tight positions, so " +
+                    "you get fewer plants rather than unhealthy ones.",
+                    new AcceptableValueRange<float>(1f, 2f)));
 
             m_increaseSpacingHotKey = Config.Bind("Custom Crop Spacing",
                 "Increase Spacing Hot Key",

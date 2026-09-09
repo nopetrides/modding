@@ -188,7 +188,15 @@ namespace Crop_Utils
                 if (heightmap == null || (_placedPiece.m_cultivatedGroundOnly && !heightmap.IsCultivated(plantPosition)))
                 {
                     #if LOGGING
-                    CropUtils.Log.LogInfo($"Did not plant: Not valid plant surface. Needs cultived {_placedPiece.m_cultivatedGroundOnly}, On cultivated {heightmap.IsCultivated(plantPosition)}");
+                    CropUtils.Log.LogInfo($"Did not plant: Not valid plant surface. Needs cultivated {_placedPiece.m_cultivatedGroundOnly}, On cultivated {heightmap.IsCultivated(plantPosition)}");
+                    #endif
+                    continue;
+                }
+
+                if (!CanGrowAt(_placedPiece.gameObject, plantPosition))
+                {
+                    #if LOGGING
+                    CropUtils.Log.LogInfo($"Did not plant: Plant cannot grow in {Heightmap.FindBiome(plantPosition)}");
                     #endif
                     continue;
                 }
@@ -367,7 +375,7 @@ namespace Crop_Utils
             Vector3 arcDegrees = new Vector3(0, 60, 0);
             int maxDistanceFromOrigin = CropUtils.Instance.UtilRange;
             List<Vector3> hexes = new List<Vector3>();
-            float distanceBetween = plantGrowthRadius * 2;
+            float distanceBetween = PatternSpacing(plantGrowthRadius);
             _hexListCoroutine = CropUtils.Instance.StartCoroutine(BuildHexList(originPos, maxDistanceFromOrigin, hexes, distanceBetween));
 
 #region Previous Attempts
@@ -493,13 +501,13 @@ namespace Crop_Utils
         /// <returns></returns>
         private static List<Vector3> LinePlantPositions(Transform originPos, float plantGrowthRadius)
         {
-            float growthDiameter = plantGrowthRadius * 2f;
+            float spacing = PatternSpacing(plantGrowthRadius);
 
-            int expectedQuantityOfGhosts = Mathf.CeilToInt(CropUtils.Instance.UtilRange / growthDiameter);
+            int expectedQuantityOfGhosts = Mathf.CeilToInt(CropUtils.Instance.UtilRange / spacing);
 
             List<Vector3> positionList = new List<Vector3>(expectedQuantityOfGhosts);
 
-            Vector3 distanceBetween = originPos.rotation * Vector3.forward * growthDiameter;
+            Vector3 distanceBetween = originPos.rotation * Vector3.forward * spacing;
             Vector3 nextPosition = distanceBetween;
             nextPosition += originPos.position;
 
@@ -523,6 +531,62 @@ namespace Crop_Utils
         private static bool HasGrowSpace(Vector3 newPos, float plantGrowthRadius)
         {
             return Physics.OverlapSphere(newPos, plantGrowthRadius, _plantSpaceMask).Length == 0;
+        }
+
+        /// <summary>
+        /// How far apart to lay out the pattern.
+        /// Plant.HaveGrowSpace only sweeps a single grow radius from a plant's own centre, so two plants
+        /// need a little over one radius between them, not two. The multiplier keeps a margin for the
+        /// collider extents that OverlapSphere actually tests against.
+        /// </summary>
+        /// <param name="plantGrowthRadius"></param>
+        /// <returns></returns>
+        private static float PatternSpacing(float plantGrowthRadius)
+        {
+            return plantGrowthRadius * CropUtils.Instance.GrowRadiusSpacingMultiplier;
+        }
+
+        /// <summary>
+        /// Mirrors the environment tests in Plant.UpdateHealth so the util refuses positions where a
+        /// plant could be placed but would never reach Healthy.
+        /// Note this reads Plant.m_biome, not Piece.m_onlyInBiome: crops leave the piece field unset and
+        /// carry the restriction on the Plant component instead.
+        /// </summary>
+        /// <param name="plantable"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        private static bool CanGrowAt(GameObject plantable, Vector3 position)
+        {
+            Plant plant = plantable.GetComponent<Plant>();
+            if (!plant)
+            {
+                // Not a plant, so there is nothing here to restrict. Spacing is handled elsewhere.
+                return true;
+            }
+
+            Heightmap heightmap = Heightmap.FindHeightmap(position);
+            if (!heightmap)
+            {
+                return true;
+            }
+
+            Heightmap.Biome biome = heightmap.GetBiome(position);
+            if ((biome & plant.m_biome) == 0)
+            {
+                return false;
+            }
+            if (!plant.m_tolerateHeat && biome == Heightmap.Biome.AshLands &&
+                !ShieldGenerator.IsInsideShield(position))
+            {
+                return false;
+            }
+            if (!plant.m_tolerateCold &&
+                (biome == Heightmap.Biome.DeepNorth || biome == Heightmap.Biome.Mountain) &&
+                !ShieldGenerator.IsInsideShield(position))
+            {
+                return false;
+            }
+            return true;
         }
 
         [HarmonyPostfix]
@@ -584,6 +648,16 @@ namespace Crop_Utils
             if (plantGrowthRadius <= 0)
             {
                 return;
+            }
+
+            // The base game only evaluates biome, heat and cold once a plant tries to grow, so vanilla
+            // leaves the origin ghost green where the extra ghosts already show red. Refuse it here too
+            // while the hotkey is held. TryPlacePiece re-runs UpdatePlacementGhost before reading
+            // m_placementStatus, so setting it in this postfix is enough to block the placement.
+            if (!CanGrowAt(gameObject, gameObject.transform.position))
+            {
+                gameObject.GetComponent<Piece>().SetInvalidPlacementHeightlight(true);
+                __instance.m_placementStatus = Player.PlacementStatus.WrongBiome;
             }
 #if LOGGING
             CropUtils.Log.LogWarning("6");
@@ -649,6 +723,10 @@ namespace Crop_Utils
                     {
                         invalidPlacementHighlight = true;
                     }
+                    else if (!CanGrowAt(gameObject, ghostPosition))
+                    {
+                        invalidPlacementHighlight = true;
+                    }
                     else if (!HasGrowSpace(ghostPosition, plantGrowthRadius))
                     {
                         invalidPlacementHighlight = true;
@@ -677,7 +755,7 @@ namespace Crop_Utils
         private static bool DidGhostsBuild(Player player, float plantGrowthRadius)
         {
             int expectedQuantityOfGhosts;
-            expectedQuantityOfGhosts = Mathf.CeilToInt(CropUtils.Instance.UtilRange / (plantGrowthRadius * 2f));
+            expectedQuantityOfGhosts = Mathf.CeilToInt(CropUtils.Instance.UtilRange / PatternSpacing(plantGrowthRadius));
             
             if (Input.GetKey(CropUtils.Instance.UtilAltControllerButton.MainKey) ||
                 Input.GetKey(CropUtils.Instance.UtilAltHotKey.MainKey))

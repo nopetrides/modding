@@ -1,4 +1,4 @@
-# CropUtils v 2.0.0
+# CropUtils v 2.0.1
 
 Inspired by MassFarming by Xeio, but uses more efficient triangle packing for optimal placement as well as harvesting a large area at once.
 
@@ -47,6 +47,14 @@ Tested with some mods that add additional plants but compatibility not guarentee
 	- Locking the shape with an invalid origin, then looking away may let you place the first plant even if it shows as invalid. All other plants should correctly respect the preview, only planting if they are valid.
 
 # Changelog:
+
+2.0.1
+
+Plants now pack tighter. The pattern used to leave two grow radii between plants when Valheim only needs a little over one, so fields were about twice as sparse as they had to be. The new "GrowRadiusSpacingMultiplier" setting controls this, defaulting to 1.5 - lower it for tighter packing, raise it back to 2.0 for the old behaviour.
+
+The tool now refuses to plant where a crop could never grow. It checks biome, plus Ashlands heat and Mountain / Deep North cold, the same way Plant.UpdateHealth does, and applies to the first plant as well as the pattern. Planting magecap in the Meadows is now blocked instead of silently wasting the seed. This is stricter than the base game, which lets you plant anywhere and only tells you once the crop fails to grow.
+
+**Config note: some settings reset to their defaults on first launch.** The keybind section was split across "Util Keys" and "Utils Keys" and is now unified under "Util Keys", "Mod Compatability Mode" is now spelled "Mod Compatibility Mode", and the misspelled "Utlity Alternative Hot Key" is now "Utility Alternative Hot Key". Rebinding is a one-time cost. Affected: Utility Hot Key, Increase Range Hot Key, Utility Alternative Hot Key, and IgnorePlantTypeRestriction. The old entries are left behind in the config file and can be deleted.
 
 2.0.0
 

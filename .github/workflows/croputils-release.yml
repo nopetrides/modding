@@ -1,6 +1,14 @@
 name: Build CropUtils package
 
 on:
+  push:
+    paths:
+      - .github/workflows/croputils-release.yml
+      - ValheimMods/Crop_Utils/**
+  pull_request:
+    paths:
+      - .github/workflows/croputils-release.yml
+      - ValheimMods/Crop_Utils/**
   workflow_dispatch:
     inputs:
       publish:
@@ -97,14 +105,14 @@ jobs:
           if-no-files-found: error
 
       - name: Require token when publishing was requested
-        if: ${{ inputs.publish && env.THUNDERSTORE_TOKEN == '' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish && env.THUNDERSTORE_TOKEN == '' }}
         shell: bash
         run: |
           echo "publish=true was requested, but the THUNDERSTORE_TOKEN repository secret is unavailable." >&2
           exit 1
 
       - name: Publish package to Thunderstore
-        if: ${{ inputs.publish && env.THUNDERSTORE_TOKEN != '' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish && env.THUNDERSTORE_TOKEN != '' }}
         uses: GreenTF/upload-thunderstore-package@v4.1
         with:
           community: valheim

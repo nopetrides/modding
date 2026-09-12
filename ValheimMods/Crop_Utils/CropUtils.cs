@@ -19,7 +19,7 @@ namespace Crop_Utils
 
         public const string PluginGUID = "com.nopetrides.valheim.crop-utils";
         public const string PluginName = "Crop Utils";
-        public const string PluginVersion = "2.0.1";
+        public const string PluginVersion = "2.0.4";
         public const string VALHEIM_EXE_NAME = "valheim.exe";
         internal const string LoggerName = "CropUtilsLog";
 
@@ -165,7 +165,10 @@ namespace Crop_Utils
             m_cropUtilDiscount = Config.Bind("Stamina & Tool Durability Discount",
                "StaminaDiscountConfig",
                20,
-               new ConfigDescription("The divider for how much less stamina planting uses when using the util (stamina cost / 20) default"));
+               new ConfigDescription(
+                   "Divides stamina and tool durability costs while using CropUtils (default: 20). " +
+                   "Valheim does not currently treat this discount as a cheat for achievements. " +
+                   "Achievement eligibility is controlled by Valheim and may change in future updates."));
             
             // Compatibility mode (allow custom crops)
             m_allowPlantAnything = Config.Bind("Mod Compatibility Mode",

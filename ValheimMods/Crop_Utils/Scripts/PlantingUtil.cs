@@ -169,9 +169,10 @@ namespace Crop_Utils
             float staminaCost = equippedTool.m_shared.m_attack.m_attackStamina / CropUtils.Instance.Discount;
             float durabilityCost = equippedTool.m_shared.m_attack.m_attackStamina / CropUtils.Instance.Discount;
 
-            // Matches how Player.TryPlacePiece flags a placement as cheated before recording stats
-            bool cheated = (__instance.m_inventory.ItemCheated(_placedPiece.m_resources) ||
-                            Player.m_localPlayer.NoCostCheat()) && !PlayerProfile.s_bypassCheatChecks;
+            // Report how the placement was paid for. Valheim owns the separate policy that decides
+            // whether cheated placements affect achievements.
+            bool cheated = __instance.m_inventory.ItemCheated(_placedPiece.m_resources) ||
+                           __instance.NoCostCheat();
 
             foreach (Vector3 plantPosition in newPlantPositions)
             {

@@ -1,0 +1,152 @@
+name: Build CropUtils package
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/croputils-release.yml
+      - ValheimMods/Crop_Utils/**
+  pull_request:
+    paths:
+      - .github/workflows/croputils-release.yml
+      - ValheimMods/Crop_Utils/**
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the built package to Thunderstore
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      MOD_DIR: ValheimMods/Crop_Utils
+      VALHEIM_DIR: ${{ github.workspace }}/.valheim-server
+      MANAGED_DIR: ${{ github.workspace }}/.valheim-server/valheim_server_Data/Managed
+      DIST_DIR: ${{ github.workspace }}/dist
+      PACKAGE_NAME: CropUtils_Thunderstore_204.zip
+      THUNDERSTORE_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            6.0.x
+            8.0.x
+
+      - name: Download SteamCMD
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/steamcmd" "$VALHEIM_DIR"
+          curl --fail --location --retry 5 \
+            https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz \
+            | tar -xz -C "$RUNNER_TEMP/steamcmd"
+
+      - name: Download current Valheim Dedicated Server assemblies
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            if "$RUNNER_TEMP/steamcmd/steamcmd.sh" \
+              +@sSteamCmdForcePlatformType windows \
+              +force_install_dir "$VALHEIM_DIR" \
+              +login anonymous \
+              +app_update 896660 validate \
+              +quit; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "SteamCMD failed after $attempt attempts." >&2
+              exit 1
+            fi
+            echo "SteamCMD attempt $attempt failed; retrying anonymous download."
+          done
+          test -f "$MANAGED_DIR/assembly_valheim.dll"
+
+      - name: Generate publicized assemblies
+        shell: bash
+        run: |
+          dotnet tool install --tool-path "$RUNNER_TEMP/publicizer" \
+            BepInEx.AssemblyPublicizer.Cli --version 0.4.3
+          mkdir -p "$MANAGED_DIR/publicized_assemblies"
+          for assembly in assembly_valheim assembly_utils assembly_guiutils UnityEngine.UI; do
+            "$RUNNER_TEMP/publicizer/assembly-publicizer" \
+              "$MANAGED_DIR/$assembly.dll" \
+              --output "$MANAGED_DIR/publicized_assemblies/${assembly}_publicized.dll"
+          done
+
+      - name: Build CropUtils in Release
+        shell: bash
+        run: |
+          dotnet build "$MOD_DIR/Crop_Utils.csproj" \
+            --configuration Release \
+            -p:ValheimManaged="$MANAGED_DIR"
+
+      - name: Verify release version metadata
+        shell: bash
+        run: |
+          grep -F '<Version>2.0.4</Version>' "$MOD_DIR/Crop_Utils.csproj"
+          grep -F 'PluginVersion = "2.0.4"' "$MOD_DIR/CropUtils.cs"
+          test "$(jq -r .version_number "$MOD_DIR/Thunderstore/manifest.json")" = "2.0.4"
+          grep -F '# CropUtils v 2.0.4' "$MOD_DIR/Thunderstore/README.md"
+
+      - name: Create Thunderstore package
+        shell: bash
+        run: |
+          package_dir="$RUNNER_TEMP/CropUtils-package"
+          mkdir -p "$package_dir" "$DIST_DIR"
+          cp "$MOD_DIR/bin/Release/netstandard2.1/Crop_Utils.dll" "$package_dir/"
+          cp "$MOD_DIR/Thunderstore/icon.png" "$package_dir/"
+          cp "$MOD_DIR/Thunderstore/manifest.json" "$package_dir/"
+          cp "$MOD_DIR/Thunderstore/README.md" "$package_dir/"
+          (cd "$package_dir" && zip -9 -r "$DIST_DIR/$PACKAGE_NAME" .)
+          unzip -l "$DIST_DIR/$PACKAGE_NAME"
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CropUtils-2.0.4
+          path: dist/CropUtils_Thunderstore_204.zip
+          if-no-files-found: error
+
+      - name: Require token when publishing was requested
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish && env.THUNDERSTORE_TOKEN == '' }}
+        shell: bash
+        run: |
+          echo "publish=true was requested, but the THUNDERSTORE_TOKEN repository secret is unavailable." >&2
+          exit 1
+
+      - name: Publish package to Thunderstore
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish && env.THUNDERSTORE_TOKEN != '' }}
+        uses: GreenTF/upload-thunderstore-package@v4.1
+        with:
+          community: valheim
+          namespace: NoPetRides
+          name: CropUtils
+          version: 2.0.4
+          description: More efficient crop planting and area harvesting for Valheim.
+          categories: |
+            mods
+            tweaks
+            misc
+            tools
+            crafting
+            client-side
+            utility
+            building
+            hildirs-request-update
+            ashlands-update
+            bog-witch-update
+            deep-north-update
+          website: https://github.com/nopetrides/modding/tree/main/ValheimMods/Crop_Utils
+          token: ${{ secrets.THUNDERSTORE_TOKEN }}
+          file: dist/CropUtils_Thunderstore_204.zip

@@ -134,5 +134,19 @@ jobs:
           name: CropUtils
           version: 2.0.3
           description: More efficient crop planting and area harvesting for Valheim.
+          categories: |
+            mods
+            tweaks
+            misc
+            tools
+            crafting
+            client-side
+            utility
+            building
+            hildirs-request-update
+            ashlands-update
+            bog-witch-update
+            deep-north-update
+          website: https://github.com/nopetrides/modding/tree/main/ValheimMods/Crop_Utils
           token: ${{ secrets.THUNDERSTORE_TOKEN }}
           file: dist/CropUtils_Thunderstore_203.zip

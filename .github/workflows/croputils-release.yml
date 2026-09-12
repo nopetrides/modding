@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: "WARNING: Publishes this version to Thunderstore; leave off for build-only runs"
+        description: Publish the built package to Thunderstore
         required: true
         default: false
         type: boolean

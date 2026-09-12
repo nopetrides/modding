@@ -165,7 +165,7 @@ namespace Crop_Utils
             m_cropUtilDiscount = Config.Bind("Stamina & Tool Durability Discount",
                "StaminaDiscountConfig",
                20,
-               new ConfigDescription("The divider for how much less stamina planting uses when using the util (stamina cost / 20) default"));
+               new ConfigDescription(\n                   "Divides stamina and tool durability costs while using CropUtils (default: 20). " +\n                   "Valheim does not currently treat this discount as a cheat for achievements. " +\n                   "Achievement eligibility is controlled by Valheim and may change in future updates."));
             
             // Compatibility mode (allow custom crops)
             m_allowPlantAnything = Config.Bind("Mod Compatibility Mode",

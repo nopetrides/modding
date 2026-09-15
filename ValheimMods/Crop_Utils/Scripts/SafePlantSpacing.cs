@@ -17,6 +17,7 @@ namespace Crop_Utils
         private static readonly FieldInfo HexListCoroutineField = AccessTools.Field(typeof(PlantingUtil), "_hexListCoroutine");
         private static readonly MethodInfo HasGrowSpaceMethod = AccessTools.Method(typeof(PlantingUtil), "HasGrowSpace");
         private static readonly MethodInfo CanGrowAtMethod = AccessTools.Method(typeof(PlantingUtil), "CanGrowAt");
+        private static readonly MethodInfo FindGrowRadiusMethod = AccessTools.Method(typeof(PlantingUtil), "TryFindPlantGrowthRadius");
 
         private static float? _manualSpacingOverride;
         private static float _lastEffectiveSpacing;
@@ -34,9 +35,6 @@ namespace Crop_Utils
                 float colliderRadius = HorizontalColliderRadius(prefab);
                 if (colliderRadius > 0f)
                 {
-                    // Plant.HaveGrowSpace sweeps plantGrowthRadius from the plant root. Keeping the
-                    // neighbouring plant's complete horizontal footprint outside that sweep is the
-                    // pattern-level floor. Actual candidate validity is still checked separately.
                     floor = plantGrowthRadius + colliderRadius;
                 }
             }
@@ -46,11 +44,6 @@ namespace Crop_Utils
             _lastEffectiveSpacing = __result;
         }
 
-        /// <summary>
-        /// The +/- keys are a runtime spacing override. The first press starts from the spacing that is
-        /// actually on screen, rather than from the otherwise-unused custom-spacing config value.
-        /// Further presses always move by the requested amount until the prefab-derived floor is reached.
-        /// </summary>
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CropUtils), nameof(CropUtils.ChangeSpacing))]
         private static bool ChangeSpacingPrefix(float spacingChange)
@@ -62,11 +55,6 @@ namespace Crop_Utils
             return false;
         }
 
-        /// <summary>
-        /// Sync before every grow-space query. Batch planting creates and moves colliders several times
-        /// in one frame; without a sync the next candidate can query stale physics state. This also lets
-        /// the normal 3D OverlapSphere make the final decision on vertically uneven cultivated ground.
-        /// </summary>
         [HarmonyPrefix]
         [HarmonyPatch(typeof(PlantingUtil), "HasGrowSpace")]
         private static void HasGrowSpacePrefix()
@@ -74,16 +62,11 @@ namespace Crop_Utils
             Physics.SyncTransforms();
         }
 
-        /// <summary>
-        /// Valheim validates the original clicked plant before CropUtils places the rest of a pattern,
-        /// but it does not include CropUtils' grow-health checks. While a utility planting hotkey is held,
-        /// reject that first plant too if the same checks used for generated candidates fail.
-        /// </summary>
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Player), "TryPlacePiece")]
         private static bool TryPlacePiecePrefix(Player __instance, ref bool __result)
         {
-            if (!UtilityPlantingHeld() || PlacementGhostField == null)
+            if (!UtilityPlantingHeld() || PlacementGhostField == null || FindGrowRadiusMethod == null)
             {
                 return true;
             }
@@ -100,7 +83,7 @@ namespace Crop_Utils
                 return true;
             }
 
-            float growRadius = PlantingUtil.TryFindPlantGrowthRadius(ghost);
+            float growRadius = (float)FindGrowRadiusMethod.Invoke(null, new object[] { ghost });
             if (growRadius <= 0f)
             {
                 return true;
@@ -125,11 +108,6 @@ namespace Crop_Utils
             return false;
         }
 
-        /// <summary>
-        /// Radius generation is intentionally incremental. If the cultivator/toolbar selection changes,
-        /// its placement Transform can be destroyed while the coroutine is still yielding. Cancel it as
-        /// soon as a new placement ghost is set up so BuildHexList cannot resume against a dead origin.
-        /// </summary>
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Player), "SetupPlacementGhost")]
         private static void SetupPlacementGhostPrefix()
@@ -188,10 +166,6 @@ namespace Crop_Utils
             return pieceTable != null ? pieceTable.GetSelectedPrefab() : null;
         }
 
-        /// <summary>
-        /// Returns the radius of a circle, centred on the plant root, containing the XZ projection of
-        /// every enabled grow-space collider bound. World orientation is deliberately never used.
-        /// </summary>
         private static float HorizontalColliderRadius(GameObject prefab)
         {
             Transform root = prefab.transform;

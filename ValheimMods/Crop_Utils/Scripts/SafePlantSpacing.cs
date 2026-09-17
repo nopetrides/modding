@@ -33,14 +33,41 @@ namespace Crop_Utils
         private static float _lastSpacingFloor;
 
         /// <summary>
-        /// Footprint is a fixed property of the prefab, but PatternSpacing runs every frame the ghosts
-        /// update, so measuring it on each call would walk every child collider per frame.
+        /// How far past our own requirement to look for neighbours. A neighbour of a different species
+        /// can demand more room than we do, so the first pass has to be wider than our own need before
+        /// the exact pairwise maths can run.
         /// </summary>
-        private static readonly Dictionary<GameObject, float> FootprintCache =
-            new Dictionary<GameObject, float>();
+        private const float NeighbourScanFactor = 2f;
+
+        /// <summary>
+        /// Guards against a grow chain that loops back on itself.
+        /// </summary>
+        private const int MaxGrowChainDepth = 6;
+
+        /// <summary>
+        /// Profiles are fixed per species, but this is consulted every frame the ghosts update, so
+        /// measuring colliders or walking the grow chain on each call is not affordable.
+        /// Keyed by prefab name so a live plant in the world resolves to the same entry as its prefab.
+        /// </summary>
+        private static readonly Dictionary<string, PlantProfile> ProfileCache =
+            new Dictionary<string, PlantProfile>();
+
+        private static readonly Collider[] NeighbourBuffer = new Collider[128];
 
         private static readonly int GrowSpaceMask =
             LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "piece_nonsolid");
+
+        /// <summary>
+        /// The worst case a plant will ever present to its neighbours, over its whole life.
+        /// </summary>
+        private struct PlantProfile
+        {
+            /// <summary>Largest radius this plant will ever sweep looking for space.</summary>
+            public float Radius;
+
+            /// <summary>Largest XZ reach its colliders will ever have, fully grown and at max scale.</summary>
+            public float Footprint;
+        }
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(PlantingUtil), "PatternSpacing")]
@@ -65,19 +92,68 @@ namespace Crop_Utils
         /// <returns>Minimum centre-to-centre distance between two of these plants</returns>
         private static float SpacingFloor(GameObject prefab, float fallbackRadius)
         {
-            if (!prefab)
+            Plant plant = prefab ? prefab.GetComponent<Plant>() : null;
+            if (!plant)
             {
                 return fallbackRadius;
             }
 
-            float radius = fallbackRadius;
-            Plant plant = prefab.GetComponent<Plant>();
-            if (plant)
+            PlantProfile profile = ProfileFor(prefab, plant);
+            return profile.Radius + profile.Footprint + SpacingEpsilon;
+        }
+
+        /// <summary>
+        /// Clearance has to work both ways. Each plant runs its own HaveGrowSpace, so a position is
+        /// only safe if it satisfies our sweep against the neighbour's bulk AND the neighbour's sweep
+        /// against ours. Planting next to an existing crop was invalidating that crop rather than the
+        /// new one, because only our own requirement was being honoured.
+        /// Sizes are taken fully grown on both sides, since the growth tick keeps re-checking.
+        /// </summary>
+        /// <param name="position">Candidate planting position</param>
+        /// <returns>False if any nearby plant and this one cannot both have room</returns>
+        private static bool HasMutualClearance(Vector3 position)
+        {
+            GameObject prefab = GetSelectedPlantPrefab();
+            Plant ourPlant = prefab ? prefab.GetComponent<Plant>() : null;
+            if (!ourPlant)
             {
-                radius = Mathf.Max(plant.m_growRadius, plant.m_growRadiusVines);
+                return true;
             }
 
-            return radius + HorizontalColliderRadius(prefab) + SpacingEpsilon;
+            PlantProfile ours = ProfileFor(prefab, ourPlant);
+
+            // Wide first pass. We cannot know a neighbour's requirement until we have found it, so cast
+            // past our own and let the pairwise test below reject what actually conflicts.
+            float scan = (ours.Radius + ours.Footprint) * NeighbourScanFactor;
+            int hits = Physics.OverlapSphereNonAlloc(position, scan, NeighbourBuffer, GrowSpaceMask);
+
+            for (int i = 0; i < hits; i++)
+            {
+                Collider hit = NeighbourBuffer[i];
+                if (!hit)
+                {
+                    continue;
+                }
+
+                Plant neighbour = hit.GetComponentInParent<Plant>();
+                if (!neighbour)
+                {
+                    continue;
+                }
+
+                PlantProfile theirs = ProfileFor(neighbour.gameObject, neighbour);
+                float needed = Mathf.Max(theirs.Radius + ours.Footprint, ours.Radius + theirs.Footprint) +
+                               SpacingEpsilon;
+
+                Vector3 delta = neighbour.transform.position - position;
+                delta.y = 0f;
+                if (delta.sqrMagnitude < needed * needed)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         [HarmonyPrefix]
@@ -100,6 +176,22 @@ namespace Crop_Utils
         private static void HasGrowSpacePrefix()
         {
             Physics.SyncTransforms();
+        }
+
+        /// <summary>
+        /// Folded in here so every caller - the pattern ghosts, the actual planting loop and the origin
+        /// warning - gets the same answer without each having to remember to ask separately.
+        /// </summary>
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(PlantingUtil), "HasGrowSpace")]
+        private static void HasGrowSpacePostfix(Vector3 newPos, ref bool __result)
+        {
+            if (!__result)
+            {
+                return;
+            }
+
+            __result = HasMutualClearance(newPos);
         }
 
         [HarmonyPrefix]
@@ -163,34 +255,64 @@ namespace Crop_Utils
         /// </summary>
         /// <param name="prefab">The plant prefab being placed</param>
         /// <returns>Footprint radius in metres</returns>
-        private static float HorizontalColliderRadius(GameObject prefab)
+        /// <summary>
+        /// Worst case this species will ever present, walking the whole grow chain.
+        /// A sapling is not what a neighbour has to live beside: Plant.UpdateHealth re-runs
+        /// HaveGrowSpace on every growth tick, and by then the plant may be several stages on. Each
+        /// stage can be a Plant in its own right with a larger grow radius, and Plant.Grow scales the
+        /// new object by a random value up to m_maxScale, which scales its colliders with it.
+        /// </summary>
+        /// <param name="root">Prefab or live instance to profile</param>
+        /// <param name="plant">Its Plant component</param>
+        /// <returns>The largest radius and footprint it will ever have</returns>
+        private static PlantProfile ProfileFor(GameObject root, Plant plant)
         {
-            if (FootprintCache.TryGetValue(prefab, out float cached))
+            string key = CleanName(root.name);
+            if (ProfileCache.TryGetValue(key, out PlantProfile cached))
             {
                 return cached;
             }
 
-            float radius = MeasureFootprint(prefab);
+            PlantProfile profile = Accumulate(root, plant, 1f, 0);
+            ProfileCache[key] = profile;
+            CropUtils.Log.LogInfo(
+                $"[CropUtils] {key} worst case radius {profile.Radius:0.###}, footprint {profile.Footprint:0.###}");
+            return profile;
+        }
 
-            // The sapling is not what the neighbour has to live next to. HaveGrowSpace runs again on
-            // every growth tick, and by then nearby plants may have turned into one of their
-            // m_grownPrefabs - bigger, and with no Plant component, so they fail the
-            // "is this a healthy plant" test and block outright. Reserve room for the grown form.
-            Plant plant = prefab.GetComponent<Plant>();
-            if (plant && plant.m_grownPrefabs != null)
+        private static PlantProfile Accumulate(GameObject root, Plant plant, float scale, int depth)
+        {
+            PlantProfile profile;
+            // m_growRadius is passed to OverlapSphere unscaled, so unlike the colliders it does not
+            // grow with the object's scale.
+            profile.Radius = plant ? Mathf.Max(plant.m_growRadius, plant.m_growRadiusVines) : 0f;
+            profile.Footprint = MeasureFootprint(root) * scale;
+
+            if (!plant || plant.m_grownPrefabs == null || depth >= MaxGrowChainDepth)
             {
-                foreach (GameObject grown in plant.m_grownPrefabs)
-                {
-                    if (grown)
-                    {
-                        radius = Mathf.Max(radius, MeasureFootprint(grown));
-                    }
-                }
+                return profile;
             }
 
-            FootprintCache[prefab] = radius;
-            CropUtils.Log.LogInfo($"[CropUtils] {prefab.name} footprint radius {radius:0.###}");
-            return radius;
+            float grownScale = scale * Mathf.Max(1f, plant.m_maxScale);
+            foreach (GameObject grown in plant.m_grownPrefabs)
+            {
+                if (!grown)
+                {
+                    continue;
+                }
+
+                PlantProfile next = Accumulate(grown, grown.GetComponent<Plant>(), grownScale, depth + 1);
+                profile.Radius = Mathf.Max(profile.Radius, next.Radius);
+                profile.Footprint = Mathf.Max(profile.Footprint, next.Footprint);
+            }
+
+            return profile;
+        }
+
+        private static string CleanName(string name)
+        {
+            int clone = name.IndexOf("(Clone)");
+            return clone >= 0 ? name.Substring(0, clone) : name;
         }
 
         /// <summary>

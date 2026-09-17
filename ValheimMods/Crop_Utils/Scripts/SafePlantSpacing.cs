@@ -24,6 +24,21 @@ namespace Crop_Utils
         private const float SpacingEpsilon = 0.01f;
 
         /// <summary>
+        /// Extra room built into the generated pattern, over and above what the clearance test demands.
+        /// Laying plants out at exactly the limit puts every neighbouring pair on the boundary of a
+        /// strict less-than comparison, so rounding decides whether each one plants. That showed up as
+        /// a preview of five planting two, every other position failing.
+        /// </summary>
+        private const float PatternMargin = 0.05f;
+
+        /// <summary>
+        /// Positions already accepted this frame. Ghosts are previewed against a world that does not
+        /// contain the rest of the batch, but planting puts them down one after another and each has
+        /// to clear the last. Without this the preview is blind to the pattern colliding with itself.
+        /// </summary>
+        private static readonly List<Vector3> PendingPositions = new List<Vector3>();
+
+        /// <summary>
         /// Runtime +/- is a nudge applied on top of whatever the config works out for the current
         /// plant, not a fixed distance. Keeping it relative means it rebases when you switch plants,
         /// so a wide tree adjustment does not follow you back to carrots.
@@ -99,7 +114,26 @@ namespace Crop_Utils
             }
 
             PlantProfile profile = ProfileFor(prefab, plant);
-            return profile.Radius + profile.Footprint + SpacingEpsilon;
+            return profile.Radius + profile.Footprint + SpacingEpsilon + PatternMargin;
+        }
+
+        /// <summary>
+        /// Start a fresh run of placements. Called at the top of both the ghost preview and the
+        /// planting loop so neither inherits the other's accepted positions.
+        /// </summary>
+        internal static void BeginPlacementBatch()
+        {
+            PendingPositions.Clear();
+        }
+
+        /// <summary>
+        /// Record a position that has passed its checks and will be planted, so the positions tested
+        /// after it have to clear it the same way they would a plant already in the ground.
+        /// </summary>
+        /// <param name="position">An accepted planting position</param>
+        internal static void AddPlacement(Vector3 position)
+        {
+            PendingPositions.Add(position);
         }
 
         /// <summary>
@@ -148,6 +182,19 @@ namespace Crop_Utils
                 Vector3 delta = neighbour.transform.position - position;
                 delta.y = 0f;
                 if (delta.sqrMagnitude < needed * needed)
+                {
+                    return false;
+                }
+            }
+
+            // Everything already accepted in this batch is the same species as us, so both sides of
+            // the mutual test collapse to the same number.
+            float sameSpecies = ours.Radius + ours.Footprint + SpacingEpsilon;
+            for (int i = 0; i < PendingPositions.Count; i++)
+            {
+                Vector3 delta = PendingPositions[i] - position;
+                delta.y = 0f;
+                if (delta.sqrMagnitude < sameSpecies * sameSpecies)
                 {
                     return false;
                 }

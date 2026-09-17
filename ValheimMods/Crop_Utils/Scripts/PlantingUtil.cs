@@ -226,6 +226,11 @@ namespace Crop_Utils
             bool cheated = __instance.m_inventory.ItemCheated(_placedPiece.m_resources) ||
                            __instance.NoCostCheat();
 
+            // Don't inherit the preview's accepted positions. Real plants exist by the time they
+            // matter here, but each one is still recorded so this loop and the preview agree exactly.
+            SafePlantSpacing.BeginPlacementBatch();
+            SafePlantSpacing.AddPlacement(_placedPosition.position);
+
             foreach (Vector3 plantPosition in newPlantPositions)
             {
                 #if LOGGING
@@ -286,6 +291,7 @@ namespace Crop_Utils
                 //CropUtils.Log.LogInfo(5);
 
                 plantSuccesses++;
+                SafePlantSpacing.AddPlacement(plantPosition);
                 GameObject newPlant = Object.Instantiate(_placedPiece.gameObject, plantPosition, _placedRotation);
                 Piece newPlantPiece = newPlant.GetComponent<Piece>();
                 if (newPlantPiece)
@@ -737,6 +743,10 @@ namespace Crop_Utils
             // Crowding and running short of seeds only tint the ghost. Both are things you might do
             // deliberately - filling a gap in a row next to a crop you are about to harvest, say - so
             // the warning is shown but the placement is left alone.
+            // The origin is the first thing planted, so the pattern has to clear it the same way it
+            // clears anything already in the ground.
+            SafePlantSpacing.BeginPlacementBatch();
+
             Vector3 originPosition = gameObject.transform.position;
             Piece originPiece = gameObject.GetComponent<Piece>();
             if (!CanGrowAt(gameObject, originPosition))
@@ -749,6 +759,7 @@ namespace Crop_Utils
             {
                 originPiece.SetInvalidPlacementHeightlight(true);
             }
+            SafePlantSpacing.AddPlacement(originPosition);
 #if LOGGING
             CropUtils.Log.LogWarning("6");
 #endif
@@ -851,6 +862,13 @@ namespace Crop_Utils
                         {
                             availableStamina -= staminaCost;
                         }
+                    }
+
+                    if (!invalidPlacementHighlight)
+                    {
+                        // Positions checked after this one have to clear it, exactly as they will when
+                        // the batch is actually planted.
+                        SafePlantSpacing.AddPlacement(ghostPosition);
                     }
                     _placementGhosts[i].GetComponent<Piece>().SetInvalidPlacementHeightlight(invalidPlacementHighlight);
                 }

@@ -201,11 +201,11 @@ namespace Crop_Utils
 
             m_increaseSpacingHotKey = Config.Bind("Custom Crop Spacing",
                 "Increase Spacing Hot Key",
-                new KeyboardShortcut(KeyCode.Minus, new KeyCode[0]),
+                new KeyboardShortcut(KeyCode.Equals, new KeyCode[0]),
                 new ConfigDescription("Key to increase the spacing between plants while using the cultivator."));
             m_decreaseSpacingHotKey = Config.Bind("Custom Crop Spacing",
                 "Decrease Spacing Hot Key",
-               new KeyboardShortcut(KeyCode.Equals, new KeyCode[0]),
+               new KeyboardShortcut(KeyCode.Minus, new KeyCode[0]),
                 new ConfigDescription("Key to decrease the spacing between plants while using the cultivator."));
         }
 

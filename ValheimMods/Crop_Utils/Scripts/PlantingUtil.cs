@@ -400,6 +400,12 @@ namespace Crop_Utils
             _placedRotation = new Quaternion();
             _lastPlantedPosition = null;
             _placedPiece = null;
+            // Destroy before dropping the array, or the ghost objects are orphaned: still in the
+            // scene, still visible, and no longer referenced by anything that could clean them up.
+            // Planting normally hides this because paying for a seed changes the inventory, which
+            // rebuilds the placement ghost and destroys them on the way through. Plant nothing at all
+            // and no seed is spent, so that never happens and the red ghosts stay for good.
+            DestroyGhosts();
             _placementGhosts = new GameObject[1];
             _placed = false;
         }

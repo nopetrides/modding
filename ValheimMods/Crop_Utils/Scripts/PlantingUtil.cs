@@ -152,12 +152,44 @@ namespace Crop_Utils
         [HarmonyPatch(typeof(Player), "PlacePiece")]
         public static void PlacePieceRotationPostfix(Player __instance, int __state)
         {
+            RestoreRotation(__instance, __state);
+        }
+
+        /// <summary>
+        /// SetupPlacementGhost re-rolls the rotation as well, and planting reaches it indirectly:
+        /// paying for the plant changes the inventory, which runs UpdateAvailablePiecesList, which
+        /// rebuilds the ghost. Without this the row still twists even though PlacePiece was handled.
+        /// </summary>
+        /// <param name="__instance">Reference to this player</param>
+        /// <param name="__state">The rotation index in effect before the ghost was rebuilt</param>
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Player), "SetupPlacementGhost")]
+        public static void SetupPlacementGhostRotationPrefix(Player __instance, out int __state)
+        {
+            __state = __instance.m_placeRotation;
+        }
+
+        /// <inheritdoc cref="SetupPlacementGhostRotationPrefix"/>
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Player), "SetupPlacementGhost")]
+        public static void SetupPlacementGhostRotationPostfix(Player __instance, int __state)
+        {
+            RestoreRotation(__instance, __state);
+        }
+
+        /// <summary>
+        /// Undo one of Valheim's rotation re-rolls, but only while the util is in use.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="rotation">The rotation index to put back</param>
+        private static void RestoreRotation(Player player, int rotation)
+        {
             if (!Input.GetKey(CropUtils.Instance.UtilControllerButton.MainKey) &&
                 !Input.GetKey(CropUtils.Instance.UtilHotKey.MainKey))
             {
                 return;
             }
-            __instance.m_placeRotation = __state;
+            player.m_placeRotation = rotation;
         }
 
         /// <summary>
@@ -555,6 +587,32 @@ namespace Crop_Utils
         }
 
         /// <summary>
+        /// Whether the player can still pay for a single plant. Vanilla does not tint the ghost when
+        /// you run out, it just refuses on click, which looks inconsistent next to the extra ghosts
+        /// that do go red. This lets the origin match them.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="piece"></param>
+        /// <returns></returns>
+        private static bool CanAffordOnePlant(Player player, Piece piece)
+        {
+            if ((bool)_noPlacementCostField.GetValue(player))
+            {
+                return true;
+            }
+
+            Piece.Requirement requirement =
+                piece.m_resources.FirstOrDefault((Piece.Requirement r) => r.m_resItem && r.m_amount > 0);
+            if (requirement == null || !requirement.m_resItem)
+            {
+                return true;
+            }
+
+            return player.m_inventory.CountItems(requirement.m_resItem.m_itemData.m_shared.m_name) >=
+                   requirement.m_amount;
+        }
+
+        /// <summary>
         /// How far apart to lay out the pattern.
         /// Plant.HaveGrowSpace only sweeps a single grow radius from a plant's own centre, so two plants
         /// need a little over one radius between them, not two. The multiplier keeps a margin for the
@@ -671,24 +729,25 @@ namespace Crop_Utils
                 return;
             }
 
-            // The base game only evaluates biome, heat and cold once a plant tries to grow, so vanilla
-            // leaves the origin ghost green where the extra ghosts already show red. Refuse it here too
-            // while the hotkey is held. TryPlacePiece re-runs UpdatePlacementGhost before reading
-            // m_placementStatus, so setting it in this postfix is enough to block the placement.
-            // Grow space is the same story: vanilla never tests it at placement time, so without this
-            // the origin could be dropped into a gap the pattern ghosts would have refused.
-            // Both go through m_placementStatus so the player gets the matching vanilla message
-            // instead of a placement that silently does nothing.
+            // Vanilla only evaluates biome, heat and cold once a plant tries to grow, so it leaves the
+            // origin ghost green where the extra ghosts already show red.
+            // Biome is refused outright: nothing you plant there will ever grow, so there is no reason
+            // to allow it. TryPlacePiece re-runs UpdatePlacementGhost before reading m_placementStatus,
+            // so setting it in this postfix is enough to block the placement.
+            // Crowding and running short of seeds only tint the ghost. Both are things you might do
+            // deliberately - filling a gap in a row next to a crop you are about to harvest, say - so
+            // the warning is shown but the placement is left alone.
             Vector3 originPosition = gameObject.transform.position;
+            Piece originPiece = gameObject.GetComponent<Piece>();
             if (!CanGrowAt(gameObject, originPosition))
             {
-                gameObject.GetComponent<Piece>().SetInvalidPlacementHeightlight(true);
+                originPiece.SetInvalidPlacementHeightlight(true);
                 __instance.m_placementStatus = Player.PlacementStatus.WrongBiome;
             }
-            else if (!HasGrowSpace(originPosition, plantGrowthRadius))
+            else if (!HasGrowSpace(originPosition, plantGrowthRadius) ||
+                     !CanAffordOnePlant(__instance, originPiece))
             {
-                gameObject.GetComponent<Piece>().SetInvalidPlacementHeightlight(true);
-                __instance.m_placementStatus = Player.PlacementStatus.MoreSpace;
+                originPiece.SetInvalidPlacementHeightlight(true);
             }
 #if LOGGING
             CropUtils.Log.LogWarning("6");

@@ -170,6 +170,36 @@ namespace Crop_Utils
                 return cached;
             }
 
+            float radius = MeasureFootprint(prefab);
+
+            // The sapling is not what the neighbour has to live next to. HaveGrowSpace runs again on
+            // every growth tick, and by then nearby plants may have turned into one of their
+            // m_grownPrefabs - bigger, and with no Plant component, so they fail the
+            // "is this a healthy plant" test and block outright. Reserve room for the grown form.
+            Plant plant = prefab.GetComponent<Plant>();
+            if (plant && plant.m_grownPrefabs != null)
+            {
+                foreach (GameObject grown in plant.m_grownPrefabs)
+                {
+                    if (grown)
+                    {
+                        radius = Mathf.Max(radius, MeasureFootprint(grown));
+                    }
+                }
+            }
+
+            FootprintCache[prefab] = radius;
+            CropUtils.Log.LogInfo($"[CropUtils] {prefab.name} footprint radius {radius:0.###}");
+            return radius;
+        }
+
+        /// <summary>
+        /// Worst-case XZ reach of one prefab's grow-space colliders, measured about its own root axis.
+        /// </summary>
+        /// <param name="prefab">Prefab to measure</param>
+        /// <returns>Footprint radius in metres</returns>
+        private static float MeasureFootprint(GameObject prefab)
+        {
             Transform root = prefab.transform;
             float maxRadiusSquared = 0f;
 
@@ -207,9 +237,7 @@ namespace Crop_Utils
                 }
             }
 
-            float radius = Mathf.Sqrt(maxRadiusSquared);
-            FootprintCache[prefab] = radius;
-            return radius;
+            return Mathf.Sqrt(maxRadiusSquared);
         }
 
         private static bool IsGrowSpaceLayer(int layer)

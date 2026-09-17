@@ -43,20 +43,20 @@ Tested with some mods that add additional plants but compatibility not guarentee
 	- In order for hex grid to not cause lag when displaying ghosts, it has to be locked in place while it builds. The line tool does not, though perfomance will suffer with very high ranges.
 	- Will cause a bunch of lag when planting very large patterns.
 	- Mod compatibility is not guaranteed, but this mod offers a generic solution should should work for most use cases.-
-	- Ashlands introduced randomized rotation. As of 2.1.0 the orientation is held steady while the util key is held, so a row no longer twists between plantings, but reselecting the seed still picks a new rotation.
+	- Ashlands introduced randomized rotation. As of 2.1.0 the orientation is held steady while the util key is held, so a row no longer twists between plantings. Let go of the key and Valheim will pick a new rotation as usual.
 	- Locking the shape with an invalid origin, then looking away may let you place the first plant even if it shows as invalid. All other plants should correctly respect the preview, only planting if they are valid.
 
 # Changelog:
 
 2.1.0
 
-Spacing is now measured from the plant itself. Previous versions multiplied the grow radius by a fixed number, which could not fit every crop - 2.0 wasted space on all of them and 1.5 was too tight for some. CropUtils now derives a minimum distance from the plant's own collider footprint and the largest radius Valheim sweeps during the growth tick, so each crop gets exactly the room it needs. "GrowRadiusSpacingMultiplier" now defaults to 1.0 and is only there if you want extra breathing room.
+Spacing is now measured from the plant itself. Previous versions multiplied the grow radius by a fixed number, which could not fit every crop - 2.0 wasted space on all of them and 1.5 was too tight for some. CropUtils now derives a minimum distance from the plant's collider footprint and the largest radius Valheim sweeps during the growth tick. It reserves room for the grown crop rather than the sapling, because Valheim re-checks for space on every growth tick and a neighbour that has already grown is both larger and blocks outright. "GrowRadiusSpacingMultiplier" now defaults to 1.0 and is only there if you want extra breathing room.
 
-The build rotation no longer changes between rows. Valheim re-rolls it after every placement for crops flagged with random rotation, which is what made each planted line face a different way. While the util key is held the rotation is now held steady. Ordinary building is untouched, and reselecting the seed still picks a new rotation.
+The build rotation no longer changes between rows. Valheim re-rolls it both after placing a piece and whenever the placement ghost is rebuilt, and paying for a plant rebuilds the ghost - so a planted line kept twisting. Both are now held steady while the util key is held. Ordinary building is untouched.
 
 The preview now respects your seed count. Previously every ghost showed as valid no matter how few seeds you had. With 5 seeds you can still preview as many plants as you like, but only 5 will validate - the rest show as invalid.
 
-The first plant now respects grow space too. It was previewed as blocked but could still be placed, so a row could start in a gap too tight for it. It now refuses with the same "needs space" message the base game uses.
+Warnings are consistent between the first plant and the rest of the pattern. The first plant now tints red when it is crowded or when you have run out of seeds, which it previously did not. Crowding stays a warning rather than a refusal, so you can still start a row in a tight gap on purpose to fill in a patchy field. Planting where the crop could never grow at all is still refused.
 
 Runtime +/- spacing is now a relative nudge rather than a fixed distance, so it rebases when you switch plants instead of carrying a tree's spacing back to your carrots.
 

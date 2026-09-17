@@ -19,7 +19,7 @@ namespace Crop_Utils
 
         public const string PluginGUID = "com.nopetrides.valheim.crop-utils";
         public const string PluginName = "Crop Utils";
-        public const string PluginVersion = "2.0.4";
+        public const string PluginVersion = "2.1.0";
         public const string VALHEIM_EXE_NAME = "valheim.exe";
         internal const string LoggerName = "CropUtilsLog";
 
@@ -191,7 +191,7 @@ namespace Crop_Utils
 
             m_growRadiusSpacingMultiplier = Config.Bind("Custom Crop Spacing",
                 "GrowRadiusSpacingMultiplier",
-                1.5f,
+                1.0f,
                 new ConfigDescription(
                     "How far apart to space the pattern, as a multiple of the plant's grow radius. Valheim only needs " +
                     "slightly more than one radius between plants, so values under 2.0 pack tighter than older versions " +

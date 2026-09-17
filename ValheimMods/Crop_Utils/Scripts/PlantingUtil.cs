@@ -33,18 +33,6 @@ namespace Crop_Utils
         });
 
         /// <summary>
-        /// A placeholder piece used when doing other operations
-        /// </summary>
-        private static Piece _fakeResourcePiece = new Piece
-        {
-            m_dlc = string.Empty,
-            m_resources = new Piece.Requirement[]
-            {
-                new Piece.Requirement()
-            }
-        };
-
-        /// <summary>
         /// Did we complete the placement of the first real plant item
         /// </summary>
         private static bool _placed = false;
@@ -138,6 +126,38 @@ namespace Crop_Utils
                 return;
             }
             PlaceNextFrame(__instance);
+        }
+
+        /// <summary>
+        /// Capture the build rotation before the game places a piece.
+        /// Player.PlacePiece re-rolls m_placeRotation for any piece flagged m_randomInitBuildRotation,
+        /// which is what makes each successive row of crops face a different way.
+        /// </summary>
+        /// <param name="__instance">Reference to this player</param>
+        /// <param name="__state">The rotation index in effect before placement</param>
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Player), "PlacePiece")]
+        public static void PlacePieceRotationPrefix(Player __instance, out int __state)
+        {
+            __state = __instance.m_placeRotation;
+        }
+
+        /// <summary>
+        /// Put the build rotation back after placement so a planted row keeps one orientation.
+        /// Only applies while the util is held, so ordinary building still gets vanilla's random rotation.
+        /// </summary>
+        /// <param name="__instance">Reference to this player</param>
+        /// <param name="__state">The rotation index captured before placement</param>
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Player), "PlacePiece")]
+        public static void PlacePieceRotationPostfix(Player __instance, int __state)
+        {
+            if (!Input.GetKey(CropUtils.Instance.UtilControllerButton.MainKey) &&
+                !Input.GetKey(CropUtils.Instance.UtilHotKey.MainKey))
+            {
+                return;
+            }
+            __instance.m_placeRotation = __state;
         }
 
         /// <summary>
@@ -655,10 +675,20 @@ namespace Crop_Utils
             // leaves the origin ghost green where the extra ghosts already show red. Refuse it here too
             // while the hotkey is held. TryPlacePiece re-runs UpdatePlacementGhost before reading
             // m_placementStatus, so setting it in this postfix is enough to block the placement.
-            if (!CanGrowAt(gameObject, gameObject.transform.position))
+            // Grow space is the same story: vanilla never tests it at placement time, so without this
+            // the origin could be dropped into a gap the pattern ghosts would have refused.
+            // Both go through m_placementStatus so the player gets the matching vanilla message
+            // instead of a placement that silently does nothing.
+            Vector3 originPosition = gameObject.transform.position;
+            if (!CanGrowAt(gameObject, originPosition))
             {
                 gameObject.GetComponent<Piece>().SetInvalidPlacementHeightlight(true);
                 __instance.m_placementStatus = Player.PlacementStatus.WrongBiome;
+            }
+            else if (!HasGrowSpace(originPosition, plantGrowthRadius))
+            {
+                gameObject.GetComponent<Piece>().SetInvalidPlacementHeightlight(true);
+                __instance.m_placementStatus = Player.PlacementStatus.MoreSpace;
             }
 #if LOGGING
             CropUtils.Log.LogWarning("6");
@@ -693,8 +723,18 @@ namespace Crop_Utils
 #if LOGGING
             CropUtils.Log.LogWarning("9");
 #endif
-            _fakeResourcePiece.m_resources[0].m_resItem = requirement.m_resItem;
-            _fakeResourcePiece.m_resources[0].m_amount = requirement.m_amount;
+            // Budget for the whole batch up front. This mirrors RequirementMode.CanBuild's inventory
+            // test, but asks about a running total rather than one plant, so the preview stops going
+            // green once the seeds would have run out. Done directly instead of through
+            // HaveRequirements with a synthetic Piece, because that path calls Piece.FreeBuildKey,
+            // which needs a real GameObject to GetComponent on.
+            bool freePlacement = (bool)_noPlacementCostField.GetValue(__instance);
+            int availableResource = requirement.m_resItem
+                ? __instance.m_inventory.CountItems(requirement.m_resItem.m_itemData.m_shared.m_name)
+                : 0;
+            // The origin plant is placed by the base game and draws from the same stack.
+            int committedResource = requirement.m_amount;
+
             float availableStamina = __instance.GetStamina();
             ItemDrop.ItemData equippedTool = __instance.GetRightItem();
             List<Vector3> list = BuildPlantingPositions(gameObject.transform, plantGrowthRadius);
@@ -711,7 +751,6 @@ namespace Crop_Utils
                 }
                 else
                 {
-                    _fakeResourcePiece.m_resources[0].m_amount += requirement.m_amount;
                     _placementGhosts[i].transform.position = ghostPosition;
                     _placementGhosts[i].transform.rotation = gameObject.transform.rotation;
                     _placementGhosts[i].SetActive(true);
@@ -732,16 +771,28 @@ namespace Crop_Utils
                     {
                         invalidPlacementHighlight = true;
                     }
-                    else if (availableStamina < equippedTool.m_shared.m_attack.m_attackStamina / CropUtils.Instance.Discount)
+                    else
                     {
-                        Hud.instance.StaminaBarEmptyFlash();
-                        invalidPlacementHighlight = true;
+                        // Only a position that clears the placement checks would actually be planted,
+                        // so only those draw down stamina and seeds. Positions rejected above cost
+                        // nothing, which is how PlaceNextFrame already behaves.
+                        float staminaCost = equippedTool.m_shared.m_attack.m_attackStamina / CropUtils.Instance.Discount;
+                        committedResource += requirement.m_amount;
+
+                        if (availableStamina < staminaCost)
+                        {
+                            Hud.instance.StaminaBarEmptyFlash();
+                            invalidPlacementHighlight = true;
+                        }
+                        else if (!freePlacement && committedResource > availableResource)
+                        {
+                            invalidPlacementHighlight = true;
+                        }
+                        else
+                        {
+                            availableStamina -= staminaCost;
+                        }
                     }
-                    else if (!(bool)_noPlacementCostField.GetValue(__instance) && !__instance.HaveRequirements(originalPiece, Player.RequirementMode.CanBuild))
-                    {
-                        invalidPlacementHighlight = true;
-                    }
-                    availableStamina -= equippedTool.m_shared.m_attack.m_attackStamina / CropUtils.Instance.Discount;
                     _placementGhosts[i].GetComponent<Piece>().SetInvalidPlacementHeightlight(invalidPlacementHighlight);
                 }
             }

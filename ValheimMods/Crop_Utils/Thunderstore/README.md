@@ -1,4 +1,4 @@
-# CropUtils v 2.0.4
+# CropUtils v 2.1.0
 
 Inspired by MassFarming by Xeio, but uses more efficient triangle packing for optimal placement as well as harvesting a large area at once.
 
@@ -26,7 +26,7 @@ Tested with some mods that add additional plants but compatibility not guarentee
 	- Planting Line: Hold left ALT to plant in a line, and optionally hold Z to lock the line in place.
 	- Planting Hex: Press and hold Z first then left ALT creates a circle packed pattern for mass planting
 	- Change range: Use the ]} key to increase the size and range of the utils, and [{ to decrease the range of the utils
-	- Change spacing: If using custom spacing (disabled by default) use the - and + keys to increase or decrease the manual space between plants.
+	- Change spacing: Use the - and + keys to nudge the space between plants. The adjustment is relative to whatever spacing the current crop works out to, and will not go below the minimum that crop needs to grow.
 
 # Configurables:
 
@@ -43,10 +43,22 @@ Tested with some mods that add additional plants but compatibility not guarentee
 	- In order for hex grid to not cause lag when displaying ghosts, it has to be locked in place while it builds. The line tool does not, though perfomance will suffer with very high ranges.
 	- Will cause a bunch of lag when planting very large patterns.
 	- Mod compatibility is not guaranteed, but this mod offers a generic solution should should work for most use cases.-
-	- Ashlands introduces randomized rotation, so using the lines tool changes the orientation after planting a line. This is quite annoying and I'd like to address it in future.
+	- Ashlands introduced randomized rotation. As of 2.1.0 the orientation is held steady while the util key is held, so a row no longer twists between plantings, but reselecting the seed still picks a new rotation.
 	- Locking the shape with an invalid origin, then looking away may let you place the first plant even if it shows as invalid. All other plants should correctly respect the preview, only planting if they are valid.
 
 # Changelog:
+
+2.1.0
+
+Spacing is now measured from the plant itself. Previous versions multiplied the grow radius by a fixed number, which could not fit every crop - 2.0 wasted space on all of them and 1.5 was too tight for some. CropUtils now derives a minimum distance from the plant's own collider footprint and the largest radius Valheim sweeps during the growth tick, so each crop gets exactly the room it needs. "GrowRadiusSpacingMultiplier" now defaults to 1.0 and is only there if you want extra breathing room.
+
+The build rotation no longer changes between rows. Valheim re-rolls it after every placement for crops flagged with random rotation, which is what made each planted line face a different way. While the util key is held the rotation is now held steady. Ordinary building is untouched, and reselecting the seed still picks a new rotation.
+
+The preview now respects your seed count. Previously every ghost showed as valid no matter how few seeds you had. With 5 seeds you can still preview as many plants as you like, but only 5 will validate - the rest show as invalid.
+
+The first plant now respects grow space too. It was previewed as blocked but could still be placed, so a row could start in a gap too tight for it. It now refuses with the same "needs space" message the base game uses.
+
+Runtime +/- spacing is now a relative nudge rather than a fixed distance, so it rebases when you switch plants instead of carrying a tree's spacing back to your carrots.
 
 2.0.4
 
@@ -55,6 +67,10 @@ Updated the package icon for Valheim 1.0 and the Deep North.
 2.0.3
 
 Fixed compatibility with Valheim 1.0.12. CropUtils no longer reads Valheim's removed `PlayerProfile.s_bypassCheatChecks` field. Additional placements still tell `Game.IncrementPlayerStat` whether cheated resources or No Cost mode were used, while Valheim remains responsible for achievement opt-in policy.
+
+2.0.2
+
+Icon update only. No code changes - the plugin is identical to 2.0.1.
 
 2.0.1
 

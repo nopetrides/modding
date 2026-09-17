@@ -31,12 +31,6 @@ namespace Crop_Utils
         /// </summary>
         private const float PatternMargin = 0.05f;
 
-        /// <summary>
-        /// Positions already accepted this frame. Ghosts are previewed against a world that does not
-        /// contain the rest of the batch, but planting puts them down one after another and each has
-        /// to clear the last. Without this the preview is blind to the pattern colliding with itself.
-        /// </summary>
-        private static readonly List<Vector3> PendingPositions = new List<Vector3>();
 
         /// <summary>
         /// Runtime +/- is a nudge applied on top of whatever the config works out for the current
@@ -118,25 +112,6 @@ namespace Crop_Utils
         }
 
         /// <summary>
-        /// Start a fresh run of placements. Called at the top of both the ghost preview and the
-        /// planting loop so neither inherits the other's accepted positions.
-        /// </summary>
-        internal static void BeginPlacementBatch()
-        {
-            PendingPositions.Clear();
-        }
-
-        /// <summary>
-        /// Record a position that has passed its checks and will be planted, so the positions tested
-        /// after it have to clear it the same way they would a plant already in the ground.
-        /// </summary>
-        /// <param name="position">An accepted planting position</param>
-        internal static void AddPlacement(Vector3 position)
-        {
-            PendingPositions.Add(position);
-        }
-
-        /// <summary>
         /// Clearance has to work both ways. Each plant runs its own HaveGrowSpace, so a position is
         /// only safe if it satisfies our sweep against the neighbour's bulk AND the neighbour's sweep
         /// against ours. Planting next to an existing crop was invalidating that crop rather than the
@@ -187,19 +162,9 @@ namespace Crop_Utils
                 }
             }
 
-            // Everything already accepted in this batch is the same species as us, so both sides of
-            // the mutual test collapse to the same number.
-            float sameSpecies = ours.Radius + ours.Footprint + SpacingEpsilon;
-            for (int i = 0; i < PendingPositions.Count; i++)
-            {
-                Vector3 delta = PendingPositions[i] - position;
-                delta.y = 0f;
-                if (delta.sqrMagnitude < sameSpecies * sameSpecies)
-                {
-                    return false;
-                }
-            }
-
+            // Deliberately not checked against the rest of our own pattern. The pattern is laid out at
+            // SpacingFloor, which is already the distance two of these plants need, so members cannot
+            // conflict with each other - and a shape that invalidates itself is never what you want.
             return true;
         }
 

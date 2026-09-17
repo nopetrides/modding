@@ -38,6 +38,17 @@ namespace Crop_Utils
         private static bool _placed = false;
 
         /// <summary>
+        /// Whether the origin ghost passed its own checks on the last preview pass.
+        /// </summary>
+        private static bool _originValid = true;
+
+        /// <summary>
+        /// Set when we stopped the game planting an invalid origin, so the postfix knows not to treat
+        /// the resulting false as "nothing happened".
+        /// </summary>
+        private static bool _originSkipped = false;
+
+        /// <summary>
         /// References to all the ghost objects
         /// </summary>
         private static GameObject[] _placementGhosts = new GameObject[1];
@@ -90,6 +101,13 @@ namespace Crop_Utils
         [HarmonyPatch(typeof(Player), "TryPlacePiece")]
         public static void PlacePiecePostFix(Player __instance, ref bool __result, Piece piece)
         {
+            if (_originSkipped)
+            {
+                // The prefix already set up the batch and stopped the origin being planted.
+                _originSkipped = false;
+                return;
+            }
+
             _placed = __result;
             if (__result)
             {
@@ -98,6 +116,42 @@ namespace Crop_Utils
                 _placedRotation = gameObject.transform.rotation;
                 _placedPiece = piece;
             }
+        }
+
+        /// <summary>
+        /// An invalid origin should not stop the rest of the shape being planted. Aiming at a spot
+        /// that is already crowded is a reasonable way to fill gaps further along a row, so the
+        /// keypress is still accepted - the origin is simply skipped, unplanted and unpaid for, while
+        /// the pattern goes ahead for every position that passed.
+        /// </summary>
+        /// <param name="__instance">Reference to this player</param>
+        /// <param name="piece">The piece being placed</param>
+        /// <param name="__result">Set false, since the origin itself is not placed</param>
+        /// <returns>False to skip the original method when the origin is being skipped</returns>
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Player), "TryPlacePiece")]
+        public static bool PlacePiecePreFix(Player __instance, Piece piece, ref bool __result)
+        {
+            if (_originValid ||
+                (!Input.GetKey(CropUtils.Instance.UtilControllerButton.MainKey) &&
+                 !Input.GetKey(CropUtils.Instance.UtilHotKey.MainKey)))
+            {
+                return true;
+            }
+
+            GameObject ghost = (GameObject)_placementGhostField.GetValue(__instance);
+            if (!ghost || !ghost.activeSelf)
+            {
+                return true;
+            }
+
+            _placedPosition = ghost.transform;
+            _placedRotation = ghost.transform.rotation;
+            _placedPiece = piece;
+            _placed = true;
+            _originSkipped = true;
+            __result = false;
+            return false;
         }
         /// <summary>
         /// Before handling the placement, ensure we know we have not yet placed anything
@@ -226,11 +280,6 @@ namespace Crop_Utils
             bool cheated = __instance.m_inventory.ItemCheated(_placedPiece.m_resources) ||
                            __instance.NoCostCheat();
 
-            // Don't inherit the preview's accepted positions. Real plants exist by the time they
-            // matter here, but each one is still recorded so this loop and the preview agree exactly.
-            SafePlantSpacing.BeginPlacementBatch();
-            SafePlantSpacing.AddPlacement(_placedPosition.position);
-
             foreach (Vector3 plantPosition in newPlantPositions)
             {
                 #if LOGGING
@@ -291,7 +340,6 @@ namespace Crop_Utils
                 //CropUtils.Log.LogInfo(5);
 
                 plantSuccesses++;
-                SafePlantSpacing.AddPlacement(plantPosition);
                 GameObject newPlant = Object.Instantiate(_placedPiece.gameObject, plantPosition, _placedRotation);
                 Piece newPlantPiece = newPlant.GetComponent<Piece>();
                 if (newPlantPiece)
@@ -689,6 +737,11 @@ namespace Crop_Utils
             CropUtils.Log.LogWarning("UpdatePlacementGhostPostfix Enter");
             CropUtils.Log.LogWarning("1");
 #endif
+            // Assume valid until something below says otherwise. This method returns early in several
+            // cases - no ghost, no hotkey, not a plant - and a stale false would make the prefix skip
+            // a placement it has no business touching.
+            _originValid = true;
+
             GameObject gameObject = (GameObject)_placementGhostField.GetValue(__instance);
 #if LOGGING
             CropUtils.Log.LogWarning("2");
@@ -743,23 +796,24 @@ namespace Crop_Utils
             // Crowding and running short of seeds only tint the ghost. Both are things you might do
             // deliberately - filling a gap in a row next to a crop you are about to harvest, say - so
             // the warning is shown but the placement is left alone.
-            // The origin is the first thing planted, so the pattern has to clear it the same way it
-            // clears anything already in the ground.
-            SafePlantSpacing.BeginPlacementBatch();
-
             Vector3 originPosition = gameObject.transform.position;
             Piece originPiece = gameObject.GetComponent<Piece>();
             if (!CanGrowAt(gameObject, originPosition))
             {
                 originPiece.SetInvalidPlacementHeightlight(true);
                 __instance.m_placementStatus = Player.PlacementStatus.WrongBiome;
+                _originValid = false;
             }
             else if (!HasGrowSpace(originPosition, plantGrowthRadius) ||
                      !CanAffordOnePlant(__instance, originPiece))
             {
                 originPiece.SetInvalidPlacementHeightlight(true);
+                _originValid = false;
             }
-            SafePlantSpacing.AddPlacement(originPosition);
+            else
+            {
+                _originValid = true;
+            }
 #if LOGGING
             CropUtils.Log.LogWarning("6");
 #endif
@@ -802,8 +856,8 @@ namespace Crop_Utils
             int availableResource = requirement.m_resItem
                 ? __instance.m_inventory.CountItems(requirement.m_resItem.m_itemData.m_shared.m_name)
                 : 0;
-            // The origin plant is placed by the base game and draws from the same stack.
-            int committedResource = requirement.m_amount;
+            // The origin draws from the same stack, but only when it is actually going to be planted.
+            int committedResource = _originValid ? requirement.m_amount : 0;
 
             float availableStamina = __instance.GetStamina();
             ItemDrop.ItemData equippedTool = __instance.GetRightItem();
@@ -862,13 +916,6 @@ namespace Crop_Utils
                         {
                             availableStamina -= staminaCost;
                         }
-                    }
-
-                    if (!invalidPlacementHighlight)
-                    {
-                        // Positions checked after this one have to clear it, exactly as they will when
-                        // the batch is actually planted.
-                        SafePlantSpacing.AddPlacement(ghostPosition);
                     }
                     _placementGhosts[i].GetComponent<Piece>().SetInvalidPlacementHeightlight(invalidPlacementHighlight);
                 }

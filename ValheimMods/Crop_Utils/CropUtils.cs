@@ -19,7 +19,7 @@ namespace Crop_Utils
 
         public const string PluginGUID = "com.nopetrides.valheim.crop-utils";
         public const string PluginName = "Crop Utils";
-        public const string PluginVersion = "2.0.4";
+        public const string PluginVersion = "2.1.0";
         public const string VALHEIM_EXE_NAME = "valheim.exe";
         internal const string LoggerName = "CropUtilsLog";
 
@@ -191,7 +191,7 @@ namespace Crop_Utils
 
             m_growRadiusSpacingMultiplier = Config.Bind("Custom Crop Spacing",
                 "GrowRadiusSpacingMultiplier",
-                1.5f,
+                1.0f,
                 new ConfigDescription(
                     "How far apart to space the pattern, as a multiple of the plant's grow radius. Valheim only needs " +
                     "slightly more than one radius between plants, so values under 2.0 pack tighter than older versions " +
@@ -201,11 +201,11 @@ namespace Crop_Utils
 
             m_increaseSpacingHotKey = Config.Bind("Custom Crop Spacing",
                 "Increase Spacing Hot Key",
-                new KeyboardShortcut(KeyCode.Minus, new KeyCode[0]),
+                new KeyboardShortcut(KeyCode.Equals, new KeyCode[0]),
                 new ConfigDescription("Key to increase the spacing between plants while using the cultivator."));
             m_decreaseSpacingHotKey = Config.Bind("Custom Crop Spacing",
                 "Decrease Spacing Hot Key",
-               new KeyboardShortcut(KeyCode.Equals, new KeyCode[0]),
+               new KeyboardShortcut(KeyCode.Minus, new KeyCode[0]),
                 new ConfigDescription("Key to decrease the spacing between plants while using the cultivator."));
         }
 

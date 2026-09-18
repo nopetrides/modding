@@ -30,7 +30,7 @@ jobs:
       VALHEIM_DIR: ${{ github.workspace }}/.valheim-server
       MANAGED_DIR: ${{ github.workspace }}/.valheim-server/valheim_server_Data/Managed
       DIST_DIR: ${{ github.workspace }}/dist
-      PACKAGE_NAME: CropUtils_Thunderstore_204.zip
+      PACKAGE_NAME: CropUtils_Thunderstore_210.zip
       THUNDERSTORE_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
 
     steps:
@@ -94,10 +94,10 @@ jobs:
       - name: Verify release version metadata
         shell: bash
         run: |
-          grep -F '<Version>2.0.4</Version>' "$MOD_DIR/Crop_Utils.csproj"
-          grep -F 'PluginVersion = "2.0.4"' "$MOD_DIR/CropUtils.cs"
-          test "$(jq -r .version_number "$MOD_DIR/Thunderstore/manifest.json")" = "2.0.4"
-          grep -F '# CropUtils v 2.0.4' "$MOD_DIR/Thunderstore/README.md"
+          grep -F '<Version>2.1.0</Version>' "$MOD_DIR/Crop_Utils.csproj"
+          grep -F 'PluginVersion = "2.1.0"' "$MOD_DIR/CropUtils.cs"
+          test "$(jq -r .version_number "$MOD_DIR/Thunderstore/manifest.json")" = "2.1.0"
+          grep -F '# CropUtils v 2.1.0' "$MOD_DIR/Thunderstore/README.md"
 
       - name: Create Thunderstore package
         shell: bash
@@ -114,8 +114,8 @@ jobs:
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CropUtils-2.0.4
-          path: dist/CropUtils_Thunderstore_204.zip
+          name: CropUtils-2.1.0
+          path: dist/CropUtils_Thunderstore_210.zip
           if-no-files-found: error
 
       - name: Require token when publishing was requested
@@ -132,7 +132,7 @@ jobs:
           community: valheim
           namespace: NoPetRides
           name: CropUtils
-          version: 2.0.4
+          version: 2.1.0
           description: More efficient crop planting and area harvesting for Valheim.
           categories: |
             mods
@@ -149,4 +149,4 @@ jobs:
             deep-north-update
           website: https://github.com/nopetrides/modding/tree/main/ValheimMods/Crop_Utils
           token: ${{ secrets.THUNDERSTORE_TOKEN }}
-          file: dist/CropUtils_Thunderstore_204.zip
+          file: dist/CropUtils_Thunderstore_210.zip

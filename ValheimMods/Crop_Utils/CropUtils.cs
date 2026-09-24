@@ -19,7 +19,7 @@ namespace Crop_Utils
 
         public const string PluginGUID = "com.nopetrides.valheim.crop-utils";
         public const string PluginName = "Crop Utils";
-        public const string PluginVersion = "2.1.0";
+        public const string PluginVersion = "2.1.1";
         public const string VALHEIM_EXE_NAME = "valheim.exe";
         internal const string LoggerName = "CropUtilsLog";
 
@@ -33,6 +33,9 @@ namespace Crop_Utils
         // Render the visual indicator or not
         private ConfigEntry<bool> m_showVisualRangeIndicator;
         public bool ShowVisualRangeIndicator => m_showVisualRangeIndicator.Value;
+
+        private ConfigEntry<bool> m_pickupMatchingTypeOnly;
+        public bool PickupMatchingTypeOnly => m_pickupMatchingTypeOnly.Value;
 
         // Variable button backed by a KeyCode and a GamepadButton config
         // No idea what good gamepad buttons are
@@ -122,6 +125,11 @@ namespace Crop_Utils
                 "ShouldShowRangeIndicator",
                 true,
                 new ConfigDescription("Should the range be shown when holding down the util key"));
+
+            m_pickupMatchingTypeOnly = Config.Bind("Pickup",
+                "MatchingTypeOnly",
+                false,
+                new ConfigDescription("When enabled, mass pickup only interacts with Pickables that produce the same item as the targeted Pickable."));
 
             // Add a Gamepad button for the Hot Key
             m_increaseRangeControllerButton = Config.Bind("Util Range",

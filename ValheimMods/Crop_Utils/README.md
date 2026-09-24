@@ -1,4 +1,4 @@
-# CropUtils v 2.1.0
+# CropUtils v 2.1.1
 
 Inspired by MassFarming by Xeio, but uses more efficient triangle packing for optimal placement as well as harvesting a large area at once.
 
@@ -32,6 +32,7 @@ Tested with some mods that add additional plants but compatibility not guarentee
 
 	- Keybinds for primary & secondary tool function
 	- Pickup range display, range increase & decrease keybinds
+	- Optional matching-type-only mass pickup (disabled by default)
 	- Discount for stamina and durability use when multiplanting
 	- Show / hide range helper
 	- Support for gamepad keybinds, but admittedly defaults are probably not good. Let me know if you find some good controller binds.
@@ -47,6 +48,10 @@ Tested with some mods that add additional plants but compatibility not guarentee
 	- Locking the shape with an invalid origin, then looking away may let you place the first plant even if it shows as invalid. All other plants should correctly respect the preview, only planting if they are valid.
 
 # Changelog:
+
+2.1.1
+
+Added an optional `MatchingTypeOnly` pickup setting, disabled by default. When enabled, mass pickup only collects Pickables that produce the same item as the initially targeted Pickable. Beehive behavior is unchanged.
 
 2.1.0
 

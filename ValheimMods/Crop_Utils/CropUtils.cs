@@ -34,6 +34,9 @@ namespace Crop_Utils
         private ConfigEntry<bool> m_showVisualRangeIndicator;
         public bool ShowVisualRangeIndicator => m_showVisualRangeIndicator.Value;
 
+        private ConfigEntry<bool> m_pickupMatchingTypeOnly;
+        public bool PickupMatchingTypeOnly => m_pickupMatchingTypeOnly.Value;
+
         // Variable button backed by a KeyCode and a GamepadButton config
         // No idea what good gamepad buttons are
         private ConfigEntry<KeyboardShortcut> m_increaseRangeControllerButton;
@@ -122,6 +125,11 @@ namespace Crop_Utils
                 "ShouldShowRangeIndicator",
                 true,
                 new ConfigDescription("Should the range be shown when holding down the util key"));
+
+            m_pickupMatchingTypeOnly = Config.Bind("Pickup",
+                "MatchingTypeOnly",
+                false,
+                new ConfigDescription("When enabled, mass pickup only interacts with Pickables that produce the same item as the targeted Pickable."));
 
             // Add a Gamepad button for the Hot Key
             m_increaseRangeControllerButton = Config.Bind("Util Range",

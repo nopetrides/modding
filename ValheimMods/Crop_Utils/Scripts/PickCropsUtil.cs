@@ -61,9 +61,8 @@ namespace Crop_Utils
                     }
                     if (nearbyPickable != null && nearbyPickable != initialPickable)
                     {
-                        if (nearbyPickable.m_itemPrefab.name == initialPickable.m_itemPrefab.name || 
-                            (Input.GetKey(CropUtils.Instance.UtilControllerButton.MainKey) ||
-                            Input.GetKey(CropUtils.Instance.UtilHotKey.MainKey)))
+                        if (!CropUtils.Instance.PickupMatchingTypeOnly ||
+                            nearbyPickable.m_itemPrefab.name == initialPickable.m_itemPrefab.name)
                         {
                             nearbyPickable.Interact(__instance, false, alt);
                         }

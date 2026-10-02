@@ -51,7 +51,7 @@ Tested with some mods that add additional plants but compatibility not guarentee
 
 2.1.1
 
-Added an optional `MatchingTypeOnly` pickup setting, disabled by default. When enabled, mass pickup only collects Pickables that produce the same item as the initially targeted Pickable. Beehive behavior is unchanged.
+Added an optional `MatchingTypeOnly` pickup setting, disabled by default. When enabled, mass pickup only picks up items of the same type as the targeted item. Beehive behavior is unchanged.
 
 2.1.0
 

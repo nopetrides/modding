@@ -129,7 +129,7 @@ namespace Crop_Utils
             m_pickupMatchingTypeOnly = Config.Bind("Pickup",
                 "MatchingTypeOnly",
                 false,
-                new ConfigDescription("When enabled, mass pickup only interacts with Pickables that produce the same item as the targeted Pickable."));
+                new ConfigDescription("When enabled, mass pickup only picks up items of the same type as the targeted item."));
 
             // Add a Gamepad button for the Hot Key
             m_increaseRangeControllerButton = Config.Bind("Util Range",

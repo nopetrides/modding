@@ -2,7 +2,7 @@
     "name": "HandDrawnMap",
     "version_number": "0.4.0",
     "website_url": "https://github.com/nopetrides/modding",
-    "description": "WIP shared hand-drawn cartography. Draw and erase together on an owner-managed map with instant local editing, fading annotations, survey tools and resync. Matching mod required on server and clients.",
+    "description": "Draw your own map with pencil, eraser, fading notes and a craftable Survey Compass. Play solo or draw together on one shared map. Works with no-map worlds or alongside the vanilla map. Work in progress.",
     "dependencies": [
         "denikson-BepInExPack_Valheim-5.4.2350"
     ]

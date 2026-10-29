@@ -1,12 +1,31 @@
 # Hand Drawn Map v 0.4.0
 
-Draw the map by hand. Blank parchment with a pencil, eraser, temporary annotations and survey guides, intended for no-map worlds.
+Draw the map by hand. A blank parchment with a pencil, eraser, fading annotations and a craftable Survey Compass. Coastlines, landmarks and paths appear only where they are drawn. The player marker is disabled by default.
 
-**Work in progress. Shared map test build.** The world owner holds the map. Players draw and erase together, with immediate local editing. No cartography table needed. The same version must be installed on the host/server and every client. Solo, player-hosted and dedicated-server paths are included; live multiplayer playtesting is still needed.
+Intended for no-map adventures, but also works in worlds with the vanilla map enabled. **Rebind the Hand Drawn Map open key in those worlds: the vanilla map key takes priority when both use the same key.**
 
-Dependant on [BepInEx](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). No additional library required.
+**Work in progress.** Play solo or draw together on one shared map in multiplayer. Anyone can add or erase ink, and personal drawing appears immediately. No cartography table required. Multiplayer testing is ongoing. Feedback and suggestions welcome.
 
-# Survey Compass:
+## Installation
+
+Requires [BepInEx](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). Install through a mod manager, or place `Hand_Drawn_Map.dll` in `BepInEx/plugins`.
+
+For multiplayer, install the same mod version for every player and on the server. Supports worlds hosted by a player and dedicated servers. The host or server saves the shared map.
+
+## Tools and controls
+
+- M: Open or close the map. Configurable.
+- Escape: Close the map.
+- Left mouse: Draw or erase with the selected tool.
+- Middle mouse drag: Pan the map.
+- Mouse wheel: Zoom.
+- Ctrl+Z: Undo your own drawing or erasing, one action at a time.
+
+Pencil draws permanent ink. Eraser removes ink, including other players' drawings. Annotate draws temporary ink that fades away. Annotations are shared with everyone; survey guides are visible only to the player who creates them.
+
+Under Clear, Guides removes your survey lines and Annotations removes everyone's temporary drawings. Resync downloads a fresh copy of the shared map if drawings appear out of sync.
+
+## Survey Compass
 
 Craft at a level 1 workbench:
 
@@ -16,41 +35,19 @@ Craft at a level 1 workbench:
 
 Equip in hand, look towards a point of interest and right click with the map closed. A temporary guide line is drawn across the map in both directions. The compass is not consumed.
 
-Take two readings from the same position while turning to find where they cross. Sight the same distant point from different positions to triangulate it. Permanent landmarks and coastlines are drawn manually.
+Take two readings from the same position while turning to find your position where the lines cross. To locate a distant landmark, sight it from two different positions and mark where those lines cross.
 
-# Default keybinds:
+## Settings
 
-- M: Open / close map. Configurable.
-- Escape: Close map.
-- Left mouse: Draw or erase with the selected tool.
-- Middle mouse drag: Pan map.
-- Mouse wheel: Zoom.
-- Ctrl+Z: Undo permanent drawing and erasing, one gesture at a time.
-- Resync: Download the current owner map and reconcile pending edits.
-
-Pencil draws shared permanent ink. Anyone may erase visible ink. Annotate draws shared fading ink. Clear Annotations clears temporary ink for everyone. Survey guides and Clear Guides remain local.
-
-# Configurables:
-
-- Map keybind
-- Pencil width, eraser radius and brush indicator opacity
-- Local survey guide lifetime and owner-controlled annotation lifetime
-- Show my location, disabled by default
+Change the map key, brush sizes, brush indicator opacity and how long temporary marks last. Show my location can be enabled for a player marker. The host or server sets how long shared annotations last.
 
 See `BepInEx/config/com.nopetrides.valheim.hand-drawn-map.cfg` after first launch.
 
-# Limitations:
+## Notes
 
-- Matching mod required on the owner and all clients.
-- Mouse input required for drawing.
-- Undo affects only the latest 50 own drawing/erasing gestures. Temporary marks are not included.
-- Shared ink saves on the owner. Back up the mod's `shared/` directory with the world. Old personal files remain untouched; a new locally hosted shared map is seeded from the host character's old drawing.
-- Mod compatibility is not guaranteed.
-
-Feedback and suggestions welcome.
-
-# Changelog:
-
-0.4.0
-
-Owner/client shared drawing, streamed edits, optimistic local rendering, per-editor undo, shared annotations, Resync and recoverable owner storage. Debug survey hotkey remains excluded from Release builds.
+- Drawing requires mouse input.
+- Undo covers your latest 50 drawing or erasing actions during the current session. Temporary marks cannot be undone.
+- Annotations disappear when the host or server restarts.
+- Existing personal drawings are kept. The first time an older world is hosted, the host character's drawing becomes the starting shared map.
+- Back up the host or server's `BepInEx/config/com.nopetrides.valheim.hand-drawn-map/shared` folder alongside the world to keep its drawings.
+- Compatibility with other mods is not guaranteed.

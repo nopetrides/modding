@@ -1,20 +1,11 @@
-# 0.4.1
+# Changelog:
 
-- Personal maps work when the host has no compatible shared map, without disconnecting the player.
-- Added PersonalMapOnly, disabled by default, to use a personal map immediately.
-- Personal drawings stay separate from shared maps and save per character and world.
-- Shared hosts allow players who use personal maps or do not have the mod.
+0.4.1
 
-# 0.4.0
+Added shared maps for multiplayer. The host or server owns and saves the map, and players can draw and erase together with their own drawing appearing immediately. Supports player-hosted worlds and dedicated servers. Install the same mod version on the host or server and each player joining the shared map. Survey guides remain personal.
 
-- Draw and erase together on one shared map, with immediate drawing for each player.
-- Undo your own drawing and erasing. Other players' edits are kept.
-- Shared fading annotations; survey guides remain personal.
-- Resync button to refresh the shared map if drawings appear out of sync.
-- Supports solo play, player-hosted worlds and dedicated servers. Multiplayer testing is ongoing.
+Added optional `PersonalMapOnly`, disabled by default, to keep a self-owned map without connecting to shared drawing. Personal maps save separately for each character and world. If the host has no compatible shared map, the mod falls back to a personal map automatically.
 
-# 0.3.3
+0.3.3
 
-- Initial work-in-progress release with personal maps.
-- Pencil, eraser, fading annotations, survey guides and undo.
-- Craftable Survey Compass, distance scale and optional player marker.
+Initial work-in-progress release. Personal hand-drawn maps with pencil, eraser, fading annotations, survey guides and undo. Includes the craftable Survey Compass, distance scale and optional player marker.

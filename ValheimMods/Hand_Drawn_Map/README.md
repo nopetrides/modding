@@ -4,7 +4,7 @@ Draw the map by hand. A blank parchment with a pencil, eraser, fading annotation
 
 Intended for no-map adventures, but also works in worlds with the vanilla map enabled. **Rebind the Hand Drawn Map open key in those worlds: the vanilla map key takes priority when both use the same key.**
 
-**Work in progress.** Play solo or draw together on one shared map in multiplayer. Anyone can add or erase ink, and personal drawing appears immediately. No cartography table required. Multiplayer testing is ongoing. Feedback and suggestions welcome.
+**Work in progress.** Play solo or draw together on one shared map in multiplayer. Anyone can add or erase ink, and personal drawing appears immediately. No cartography table required. Feedback and suggestions welcome.
 
 ## Installation
 
@@ -59,3 +59,15 @@ See `BepInEx/config/com.nopetrides.valheim.hand-drawn-map.cfg` after first launc
 - Existing personal drawings are kept. The first time an older world is hosted, the host character's drawing becomes the starting shared map.
 - Back up the host or server's `BepInEx/config/com.nopetrides.valheim.hand-drawn-map/shared` folder alongside the world to keep its drawings.
 - Compatibility with other mods is not guaranteed.
+
+# Changelog:
+
+0.4.1
+
+Added shared maps for multiplayer. The host or server owns and saves the map, and players can draw and erase together with their own drawing appearing immediately. Supports player-hosted worlds and dedicated servers. Install the same mod version on the host or server and each player joining the shared map. Survey guides remain personal.
+
+Added optional `PersonalMapOnly`, disabled by default, to keep a self-owned map without connecting to shared drawing. Personal maps save separately for each character and world. If the host has no compatible shared map, the mod falls back to a personal map automatically.
+
+0.3.3
+
+Initial work-in-progress release. Personal hand-drawn maps with pencil, eraser, fading annotations, survey guides and undo. Includes the craftable Survey Compass, distance scale and optional player marker.

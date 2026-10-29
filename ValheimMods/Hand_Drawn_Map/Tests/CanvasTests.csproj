@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\ChartGeometry.cs" Link="ChartGeometry.cs" />
+    <Compile Include="..\ChartStore.cs" Link="ChartStore.cs" />
+  </ItemGroup>
+</Project>

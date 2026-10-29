@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Hand_Drawn_Map</AssemblyName>
+    <Version>0.1.1</Version>
+    <Description>Local hand-drawn cartography canvas for Valheim.</Description>
+    <LangVersion>latest</LangVersion>
+    <ValheimDir Condition="'$(ValheimDir)' == ''">J:\SteamGames\steamapps\common\Valheim</ValheimDir>
+    <ValheimManaged Condition="'$(ValheimManaged)' == ''">$(ValheimDir)\valheim_Data\Managed</ValheimManaged>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Tests\**\*.cs" />
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+    <Reference Include="assembly_valheim">
+      <HintPath>$(ValheimManaged)\assembly_valheim.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="assembly_utils">
+      <HintPath>$(ValheimManaged)\assembly_utils.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="assembly_guiutils">
+      <HintPath>$(ValheimManaged)\assembly_guiutils.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(ValheimManaged)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <ValheimAssembly Include="$(ValheimManaged)\*.dll"
+      Exclude="$(ValheimManaged)\mscorlib.dll;$(ValheimManaged)\netstandard.dll;$(ValheimManaged)\System*.dll;$(ValheimManaged)\Mono*.dll;$(ValheimManaged)\UnityEngine.UI.dll;$(ValheimManaged)\assembly_valheim.dll;$(ValheimManaged)\assembly_utils.dll;$(ValheimManaged)\assembly_guiutils.dll" />
+    <Reference Include="@(ValheimAssembly->'%(Filename)')">
+      <HintPath>$(ValheimManaged)\%(Identity).dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <Target Name="CheckGameReferences" BeforeTargets="BeforeBuild">
+    <Error Condition="!Exists('$(ValheimManaged)\assembly_valheim.dll')" Text="Set ValheimManaged to the installed Valheim Managed folder." />
+  </Target>
+  <Target Name="CopyPlugin" AfterTargets="Build">
+    <MakeDir Directories="$(MSBuildProjectDirectory)\dist" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildProjectDirectory)\dist" />
+  </Target>
+</Project>

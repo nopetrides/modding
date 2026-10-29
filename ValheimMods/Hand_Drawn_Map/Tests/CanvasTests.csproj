@@ -7,5 +7,6 @@
   <ItemGroup>
     <Compile Include="..\ChartGeometry.cs" Link="ChartGeometry.cs" />
     <Compile Include="..\ChartStore.cs" Link="ChartStore.cs" />
+    <Compile Include="..\InkHistory.cs" Link="InkHistory.cs" />
   </ItemGroup>
 </Project>

@@ -9,7 +9,7 @@ using UnityEngine.Rendering;
 
 namespace Hand_Drawn_Map
 {
-    [BepInPlugin(Guid, "Hand Drawn Map", "0.1.1")]
+    [BepInPlugin(Guid, "Hand Drawn Map", "0.2.0")]
     [BepInProcess("valheim.exe")]
     [DefaultExecutionOrder(-10000)]
     public sealed class MapPlugin : BaseUnityPlugin
@@ -21,6 +21,8 @@ namespace Hand_Drawn_Map
         internal ConfigEntry<float> SurveyLifetime;
         internal ConfigEntry<float> PencilPixels;
         internal ConfigEntry<float> EraserPixels;
+        internal ConfigEntry<float> AnnotationLifetime;
+        internal ConfigEntry<float> BrushOpacity;
         internal readonly List<SurveyGuide> Guides = new List<SurveyGuide>();
         internal ChartDocument Document;
         internal CanvasWindow Window;
@@ -50,9 +52,13 @@ namespace Hand_Drawn_Map
                 new ConfigDescription("Pencil width at the start of a stroke. The resulting ink stays in world units.", new AcceptableValueRange<float>(1f, 16f)));
             EraserPixels = Config.Bind("Drawing", "EraserRadiusPixels", 14f,
                 new ConfigDescription("Eraser radius at the start of a gesture.", new AcceptableValueRange<float>(3f, 100f)));
+            AnnotationLifetime = Config.Bind("Drawing", "AnnotationLifetimeSeconds", 120f,
+                new ConfigDescription("Temporary annotation lifetime after releasing the brush.", new AcceptableValueRange<float>(5f, 1800f)));
+            BrushOpacity = Config.Bind("Drawing", "BrushIndicatorOpacity", 0.2f,
+                new ConfigDescription("Opacity of the brush footprint indicator.", new AcceptableValueRange<float>(0f, 1f)));
             harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(MapPlugin).Assembly);
-            Logger.LogInfo("Hand Drawn Map 0.1.1 loaded.");
+            Logger.LogInfo("Hand Drawn Map 0.2.0 loaded.");
         }
 
         private void Update() => Poll();
@@ -84,7 +90,6 @@ namespace Hand_Drawn_Map
             if (!IsOpen && ShortcutDown(SurveyKey.Value) && CanUseWorldInput(player)) AddSurvey(player);
             if (IsOpen) Window.Tick();
             if (Guides.RemoveAll(guide => guide.Expires <= Time.unscaledTime) > 0) Window?.Invalidate();
-            if (Guides.Count > 0 && IsOpen) Window.Invalidate();
             if (Dirty && Time.unscaledTime - lastSave > 5f && (Window == null || !Window.InGesture)) Save();
         }
 

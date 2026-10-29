@@ -11,15 +11,27 @@ namespace Hand_Drawn_Map
         private readonly MapPlugin plugin;
         private readonly GameObject root;
         private readonly Canvas canvas;
+        private readonly RectTransform panel;
         private readonly RectTransform viewport;
         private readonly Text status;
         private readonly Text pencilLabel;
         private readonly Text eraserLabel;
+        private readonly Text annotateLabel;
+        private readonly Text scaleLabel;
+        private readonly RectTransform scaleBar;
+        private readonly RectTransform scaleEnd;
+        private readonly BrushGraphic brush;
+        private readonly InkHistory history = new InkHistory();
+        private readonly List<Annotation> annotations = new List<Annotation>();
+        private readonly Vector3[] nativeCorners = new Vector3[4];
         private readonly bool readOnly;
         private readonly List<ChartGraphic> batches = new List<ChartGraphic>();
         internal readonly List<InkSegment> Segments = new List<InkSegment>();
         private bool invalid = true;
-        private bool erase;
+        private enum Tool { Pencil, Eraser, Annotate }
+        private Tool tool;
+        private Annotation activeAnnotation;
+        private float nextFadeRefresh;
         private bool panning;
         private bool erasing;
         private ChartStroke activeStroke;
@@ -60,25 +72,39 @@ namespace Hand_Drawn_Map
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0.5f;
-            AddImage(root.GetComponent<RectTransform>(), new Color(0.12f, 0.10f, 0.08f));
+            panel = Rect("MapPanel", root.transform);
+            panel.anchorMin = Vector2.zero; panel.anchorMax = Vector2.one;
+            AddImage(panel, new Color(0.12f, 0.10f, 0.08f));
 
-            var header = Rect("Toolbar", root.transform);
+            var header = Rect("Toolbar", panel);
             header.anchorMin = new Vector2(0, 1); header.anchorMax = Vector2.one;
-            header.pivot = new Vector2(0.5f, 1); header.sizeDelta = new Vector2(0, 54);
-            Label(header, "HAND DRAWN MAP", new Vector2(20, 0), new Vector2(270, 54), 23);
-            pencilLabel = Button(header, "Pencil", 300, () => { FinishGesture(); erase = false; UpdateTools(); });
-            eraserLabel = Button(header, "Eraser", 430, () => { FinishGesture(); erase = true; UpdateTools(); });
-            Button(header, "Close", 560, plugin.CloseMap);
+            header.pivot = new Vector2(0.5f, 1); header.sizeDelta = new Vector2(0, 96);
+            Text title = Label(header, "HAND DRAWN MAP", new Vector2(20, -26), new Vector2(270, 44), 23);
+            title.rectTransform.anchorMin = title.rectTransform.anchorMax = new Vector2(0, 1);
+            pencilLabel = Button(header, "Pencil", 300, () => SelectTool(Tool.Pencil));
+            eraserLabel = Button(header, "Eraser", 430, () => SelectTool(Tool.Eraser));
+            annotateLabel = Button(header, "Annotate", 560, () => SelectTool(Tool.Annotate));
+            Button(header, "Close", 690, plugin.CloseMap);
+            scaleLabel = Label(header, "", new Vector2(300, -59), new Vector2(200, 24), 17);
+            scaleLabel.rectTransform.anchorMin = scaleLabel.rectTransform.anchorMax = new Vector2(0, 1);
+            scaleBar = ScalePart(header, new Vector2(300, -82), new Vector2(180, 2));
+            ScalePart(header, new Vector2(300, -85), new Vector2(2, 8));
+            scaleEnd = ScalePart(header, new Vector2(478, -85), new Vector2(2, 8));
 
-            viewport = Rect("Parchment", root.transform);
+            viewport = Rect("Parchment", panel);
             viewport.anchorMin = Vector2.zero; viewport.anchorMax = Vector2.one;
-            viewport.offsetMin = new Vector2(16, 54); viewport.offsetMax = new Vector2(-16, -58);
+            viewport.offsetMin = new Vector2(12, 44); viewport.offsetMax = new Vector2(-12, -100);
             AddImage(viewport, new Color(0.86f, 0.81f, 0.68f));
             viewport.gameObject.AddComponent<RectMask2D>();
-            var footer = Rect("Status", root.transform);
+            var cursor = Rect("BrushFootprint", viewport);
+            brush = cursor.gameObject.AddComponent<BrushGraphic>();
+            brush.raycastTarget = false;
+            brush.gameObject.SetActive(false);
+            var footer = Rect("Status", panel);
             footer.anchorMin = Vector2.zero; footer.anchorMax = new Vector2(1, 0);
-            footer.pivot = new Vector2(0.5f, 0); footer.sizeDelta = new Vector2(-32, 48);
+            footer.pivot = new Vector2(0.5f, 0); footer.sizeDelta = new Vector2(-24, 40);
             status = Label(footer, "", Vector2.zero, Vector2.zero, 18);
+            status.rectTransform.anchorMin = Vector2.zero;
             status.rectTransform.anchorMax = Vector2.one;
             status.rectTransform.offsetMin = new Vector2(8, 0);
             status.rectTransform.offsetMax = Vector2.zero;
@@ -90,7 +116,15 @@ namespace Hand_Drawn_Map
         {
             FinishGesture();
             root.SetActive(open);
-            if (open) { Canvas.ForceUpdateCanvases(); invalid = true; }
+            if (open)
+            {
+                RaiseCanvas();
+                Canvas.ForceUpdateCanvases();
+                MatchNativeBounds();
+                Canvas.ForceUpdateCanvases();
+                invalid = true;
+            }
+            else brush.gameObject.SetActive(false);
         }
 
         internal void Tick()
@@ -98,6 +132,14 @@ namespace Hand_Drawn_Map
             if (ZInput.GetKeyDown(KeyCode.Escape)) { plugin.CloseMap(); return; }
             ZCursor.LockState = CursorLockMode.None;
             ZCursor.Show();
+            MatchNativeBounds();
+            if (annotations.RemoveAll(annotation => annotation != activeAnnotation && annotation.Expires <= Time.unscaledTime) > 0) invalid = true;
+            if (!readOnly && Input.GetKeyDown(KeyCode.Z) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+            {
+                FinishGesture();
+                if (history.Undo(Document, out bool conflict)) { notice = null; Changed(); }
+                else notice = conflict ? "Undo skipped: affected ink has changed." : "Nothing to undo.";
+            }
             Vector2 pointer = ZInput.pointerPosition;
             bool inside = RectTransformUtility.RectangleContainsScreenPoint(viewport, pointer, null);
             RectTransformUtility.ScreenPointToLocalPointInRectangle(viewport, pointer, null, out Vector2 local);
@@ -122,15 +164,22 @@ namespace Hand_Drawn_Map
             }
             if (inside && !InGesture && !readOnly && ZInput.GetMouseButtonDown(0))
             {
-                if (erase)
+                if (tool == Tool.Eraser)
                 {
+                    history.Begin(Document);
                     erasing = true;
                     lastBrush = world;
                     eraseRadius = plugin.EraserPixels.Value * WorldPerPixel;
                     EraseTo(world);
                 }
-                else StartStroke(world);
+                else
+                {
+                    if (tool == Tool.Pencil) history.Begin(Document);
+                    StartStroke(world);
+                }
             }
+            if ((annotations.Count > 0 || plugin.Guides.Count > 0) && Time.unscaledTime >= nextFadeRefresh)
+            { invalid = true; nextFadeRefresh = Time.unscaledTime + 0.05f; }
             if (activeStroke != null || erasing)
             {
                 if (!ZInput.GetMouseButton(0) || !inside) FinishGesture();
@@ -139,15 +188,32 @@ namespace Hand_Drawn_Map
             }
             if (viewport.rect.size != lastSize || !Mathf.Approximately(lastProjection, WorldPerPixel)) invalid = true;
             if (invalid) Rebuild();
+            UpdateScale();
+            UpdateBrush(local, inside);
             status.text = readOnly ? "Chart could not be loaded. Saving and editing are disabled; check the log and restore the .bak file."
-                : notice ?? $"LMB: {(erase ? "erase" : "draw")}   |   Middle drag: pan   |   Wheel: zoom   |   {plugin.MapKey.Value} / Esc: close   |   {plugin.SurveyKey.Value}: survey in world view   |   Guides: {plugin.Guides.Count}";
+                : notice ?? $"LMB: {tool}   |   Middle drag: pan   |   Wheel: zoom   |   Ctrl+Z: undo ({history.Count})   |   {plugin.MapKey.Value} / Esc: close   |   {plugin.SurveyKey.Value}: survey in world view";
         }
 
         private void StartStroke(ChartPoint world)
         {
+            if (tool == Tool.Annotate)
+            {
+                int count = 0;
+                foreach (Annotation annotation in annotations) count += annotation.Stroke.Points.Count;
+                if (annotations.Count >= 256 || count >= 20000)
+                { notice = "Temporary drawing limit reached."; return; }
+                activeStroke = new ChartStroke(plugin.PencilPixels.Value * WorldPerPixel);
+                notice = null;
+                activeStroke.Points.Add(world);
+                activeAnnotation = new Annotation(activeStroke, float.PositiveInfinity, Time.unscaledTime);
+                annotations.Add(activeAnnotation);
+                invalid = true;
+                return;
+            }
             if (Document.PointCount >= ChartDocument.MaxPoints || Document.Strokes.Count >= ChartDocument.MaxStrokes)
             { notice = "Drawing limit reached. Erase some ink to continue."; return; }
             activeStroke = new ChartStroke(plugin.PencilPixels.Value * WorldPerPixel);
+            notice = null;
             activeStroke.Points.Add(world);
             Document.Strokes.Add(activeStroke);
             Document.PointCount++;
@@ -157,11 +223,20 @@ namespace Hand_Drawn_Map
         private void AppendPoint(ChartPoint world)
         {
             if ((world - activeStroke.Points[activeStroke.Points.Count - 1]).LengthSquared < WorldPerPixel * WorldPerPixel) return;
+            if (activeAnnotation != null)
+            {
+                int count = 0;
+                foreach (Annotation annotation in annotations) count += annotation.Stroke.Points.Count;
+                if (count >= 20000) { FinishGesture(); notice = "Temporary drawing limit reached."; return; }
+                activeStroke.Points.Add(world);
+                invalid = true;
+                return;
+            }
             if (Document.PointCount >= ChartDocument.MaxPoints) { FinishGesture(); notice = "Drawing limit reached."; return; }
             if (activeStroke.Points.Count >= ChartDocument.MaxStrokePoints)
             {
                 ChartPoint previous = activeStroke.Points[activeStroke.Points.Count - 1];
-                FinishGesture();
+                activeStroke = null;
                 StartStroke(previous);
                 if (activeStroke == null) return;
                 if (Document.PointCount >= ChartDocument.MaxPoints)
@@ -175,10 +250,33 @@ namespace Hand_Drawn_Map
         private void EraseTo(ChartPoint world)
         {
             if (Document.Erase(lastBrush, world, eraseRadius)) { notice = null; Changed(); }
+            var temporary = new List<Annotation>();
+            bool changed = false;
+            foreach (Annotation annotation in annotations)
+            {
+                var pieces = ChartGeometry.Erase(annotation.Stroke, lastBrush, world, eraseRadius, out bool cut);
+                changed |= cut;
+                foreach (ChartStroke piece in pieces)
+                    temporary.Add(new Annotation(piece, annotation.Expires, annotation.Created));
+            }
+            if (changed && temporary.Count <= 20000)
+            { annotations.Clear(); annotations.AddRange(temporary); invalid = true; }
             lastBrush = world;
         }
 
-        private void FinishGesture() { activeStroke = null; erasing = false; panning = false; }
+        private void FinishGesture()
+        {
+            if (activeAnnotation != null)
+            {
+                activeAnnotation.Created = Time.unscaledTime;
+                activeAnnotation.Expires = Time.unscaledTime + plugin.AnnotationLifetime.Value;
+            }
+            activeAnnotation = null;
+            activeStroke = null;
+            erasing = false;
+            panning = false;
+            history.Commit(Document);
+        }
         internal void Invalidate() => invalid = true;
         private void Changed() { plugin.Dirty = true; invalid = true; }
 
@@ -207,10 +305,12 @@ namespace Hand_Drawn_Map
             lastProjection = WorldPerPixel;
             Color ink = new Color(0.18f, 0.15f, 0.12f);
             foreach (ChartStroke stroke in Document.Strokes)
+                RenderStroke(stroke, ink);
+            foreach (Annotation annotation in annotations)
             {
-                if (stroke.Points.Count == 1) AddSegment(stroke.Points[0], stroke.Points[0], stroke.Width / lastProjection, ink);
-                for (int i = 1; i < stroke.Points.Count; i++)
-                    AddSegment(stroke.Points[i - 1], stroke.Points[i], stroke.Width / lastProjection, ink);
+                float fade = annotation == activeAnnotation ? 1f : Mathf.Clamp01((annotation.Expires - Time.unscaledTime) /
+                    Mathf.Min(30f, annotation.Expires - annotation.Created));
+                RenderStroke(annotation.Stroke, new Color(0.38f, 0.22f, 0.12f, fade * 0.8f));
             }
             foreach (SurveyGuide guide in plugin.Guides)
             {
@@ -236,7 +336,15 @@ namespace Hand_Drawn_Map
                 batches[i].gameObject.SetActive(i < count);
                 if (i < count) batches[i].SetVerticesDirty();
             }
+            brush.transform.SetAsLastSibling();
             invalid = false;
+        }
+
+        private void RenderStroke(ChartStroke stroke, Color color)
+        {
+            if (stroke.Points.Count == 1) AddSegment(stroke.Points[0], stroke.Points[0], stroke.Width / lastProjection, color);
+            for (int i = 1; i < stroke.Points.Count; i++)
+                AddSegment(stroke.Points[i - 1], stroke.Points[i], stroke.Width / lastProjection, color);
         }
 
         private void AddSegment(ChartPoint a, ChartPoint b, float width, Color color)
@@ -248,8 +356,84 @@ namespace Hand_Drawn_Map
 
         private void UpdateTools()
         {
-            pencilLabel.color = erase ? Color.white : new Color(1f, 0.75f, 0.3f);
-            eraserLabel.color = erase ? new Color(1f, 0.75f, 0.3f) : Color.white;
+            Color selected = new Color(1f, 0.75f, 0.3f);
+            pencilLabel.color = tool == Tool.Pencil ? selected : Color.white;
+            eraserLabel.color = tool == Tool.Eraser ? selected : Color.white;
+            annotateLabel.color = tool == Tool.Annotate ? selected : Color.white;
+        }
+
+        private void SelectTool(Tool selected)
+        { FinishGesture(); tool = selected; notice = null; UpdateTools(); }
+
+        private void UpdateScale()
+        {
+            float meters = MetricScale.Length(WorldPerPixel, 180f);
+            float width = meters / WorldPerPixel;
+            scaleBar.sizeDelta = new Vector2(width, 2);
+            scaleEnd.anchoredPosition = new Vector2(300 + width - 2, -85);
+            scaleLabel.text = MetricScale.Label(meters);
+        }
+
+        private void UpdateBrush(Vector2 local, bool inside)
+        {
+            brush.gameObject.SetActive(inside && !panning && !readOnly);
+            if (!inside) return;
+            float radius = tool == Tool.Eraser
+                ? (erasing ? eraseRadius / WorldPerPixel : plugin.EraserPixels.Value)
+                : (activeStroke != null ? activeStroke.Width / WorldPerPixel : plugin.PencilPixels.Value) * 0.5f;
+            brush.rectTransform.anchoredPosition = local;
+            brush.rectTransform.sizeDelta = Vector2.one * Mathf.Max(1f, radius * 2f);
+            Color tint = tool == Tool.Eraser ? new Color(0.65f, 0.15f, 0.12f) : new Color(0.12f, 0.22f, 0.3f);
+            tint.a = plugin.BrushOpacity.Value;
+            brush.color = tint;
+        }
+
+        private void RaiseCanvas()
+        {
+            int layer = canvas.sortingLayerID;
+            int order = 100;
+            int layerValue = SortingLayer.GetLayerValueFromID(layer);
+            foreach (Canvas other in Resources.FindObjectsOfTypeAll<Canvas>())
+            {
+                if (other == canvas || !other.isActiveAndEnabled || !other.gameObject.scene.IsValid()) continue;
+                int value = SortingLayer.GetLayerValueFromID(other.sortingLayerID);
+                if (value > layerValue)
+                { layer = other.sortingLayerID; layerValue = value; order = other.sortingOrder; }
+                else if (value == layerValue) order = Mathf.Max(order, other.sortingOrder);
+            }
+            canvas.sortingLayerID = layer;
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = Mathf.Min(32767, order + 1);
+        }
+
+        private void MatchNativeBounds()
+        {
+            RectTransform native = Minimap.instance.m_mapImageLarge.rectTransform;
+            native.GetWorldCorners(nativeCorners);
+            Canvas nativeCanvas = native.GetComponentInParent<Canvas>();
+            Camera camera = nativeCanvas != null && nativeCanvas.renderMode != RenderMode.ScreenSpaceOverlay ? nativeCanvas.worldCamera : null;
+            Vector2 bottom = RectTransformUtility.WorldToScreenPoint(camera, nativeCorners[0]);
+            Vector2 top = RectTransformUtility.WorldToScreenPoint(camera, nativeCorners[2]);
+            RectTransform canvasRect = (RectTransform)root.transform;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, bottom, null, out Vector2 localBottom);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, top, null, out Vector2 localTop);
+            Vector2 minimum = localBottom - canvasRect.rect.min;
+            Vector2 maximum = localTop - canvasRect.rect.max;
+            if (top.x - bottom.x < Screen.width * 0.25f || top.y - bottom.y < Screen.height * 0.25f)
+            { minimum = new Vector2(100, 100); maximum = new Vector2(-100, -100); }
+            if (panel.offsetMin != minimum || panel.offsetMax != maximum)
+            { panel.offsetMin = minimum; panel.offsetMax = maximum; invalid = true; }
+        }
+
+        private static RectTransform ScalePart(RectTransform parent, Vector2 position, Vector2 size)
+        {
+            RectTransform part = Rect("Scale", parent);
+            part.anchorMin = part.anchorMax = new Vector2(0, 1);
+            part.pivot = Vector2.zero;
+            part.anchoredPosition = position; part.sizeDelta = size;
+            AddImage(part, new Color(0.9f, 0.86f, 0.75f));
+            part.GetComponent<Image>().raycastTarget = false;
+            return part;
         }
 
         private static RectTransform Rect(string name, Transform parent)
@@ -282,9 +466,9 @@ namespace Hand_Drawn_Map
         private Text Button(RectTransform parent, string caption, float x, Action action)
         {
             RectTransform rect = Rect(caption, parent);
-            rect.anchorMin = rect.anchorMax = new Vector2(0, 0.5f);
-            rect.pivot = new Vector2(0, 0.5f);
-            rect.anchoredPosition = new Vector2(x, 0); rect.sizeDelta = new Vector2(120, 38);
+            rect.anchorMin = rect.anchorMax = new Vector2(0, 1);
+            rect.pivot = new Vector2(0, 1);
+            rect.anchoredPosition = new Vector2(x, -8); rect.sizeDelta = new Vector2(120, 38);
             AddImage(rect, new Color(0.25f, 0.21f, 0.16f));
             var button = rect.gameObject.AddComponent<Button>();
             button.targetGraphic = rect.GetComponent<Image>();
@@ -294,5 +478,14 @@ namespace Hand_Drawn_Map
         }
 
         public void Dispose() { if (root != null) Object.Destroy(root); }
+
+        private sealed class Annotation
+        {
+            public readonly ChartStroke Stroke;
+            public float Expires;
+            public float Created;
+            public Annotation(ChartStroke stroke, float expires, float created)
+            { Stroke = stroke; Expires = expires; Created = created; }
+        }
     }
 }

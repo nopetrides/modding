@@ -38,7 +38,7 @@
     <Error Condition="!Exists('$(ValheimManaged)\assembly_valheim.dll')" Text="Set ValheimManaged to the installed Valheim Managed folder." />
   </Target>
   <Target Name="CopyPlugin" AfterTargets="Build">
-    <MakeDir Directories="$(MSBuildProjectDirectory)\dist" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildProjectDirectory)\dist" />
+    <MakeDir Directories="$(MSBuildProjectDirectory)\Thunderstore" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildProjectDirectory)\Thunderstore" />
   </Target>
 </Project>

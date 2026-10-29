@@ -87,6 +87,10 @@ namespace Hand_Drawn_Map
             eraserLabel = Button(header, "Eraser", 430, () => SelectTool(Tool.Eraser));
             annotateLabel = Button(header, "Annotate", 560, () => SelectTool(Tool.Annotate));
             Button(header, "Close", 690, plugin.CloseMap);
+            Text clearLabel = Label(header, "Clear", new Vector2(850, -27), new Vector2(65, 38), 20);
+            clearLabel.rectTransform.anchorMin = clearLabel.rectTransform.anchorMax = new Vector2(0, 1);
+            Button(header, "Guides", 920, ClearGuides);
+            Button(header, "Annotations", 1050, ClearAnnotations, 150);
             scaleLabel = Label(header, "", new Vector2(300, -59), new Vector2(200, 24), 17);
             scaleLabel.rectTransform.anchorMin = scaleLabel.rectTransform.anchorMax = new Vector2(0, 1);
             scaleBar = ScalePart(header, new Vector2(300, -82), new Vector2(180, 2));
@@ -378,6 +382,22 @@ namespace Hand_Drawn_Map
         private void SelectTool(Tool selected)
         { FinishGesture(); tool = selected; notice = null; UpdateTools(); }
 
+        private void ClearGuides()
+        {
+            plugin.Guides.Clear();
+            notice = null;
+            invalid = true;
+        }
+
+        private void ClearAnnotations()
+        {
+            if (activeAnnotation != null)
+            { activeAnnotation = null; activeStroke = null; }
+            annotations.Clear();
+            notice = null;
+            invalid = true;
+        }
+
         private void UpdateScale()
         {
             float meters = MetricScale.Length(WorldPerPixel, 180f);
@@ -504,17 +524,17 @@ namespace Hand_Drawn_Map
             return label;
         }
 
-        private Text Button(RectTransform parent, string caption, float x, Action action)
+        private Text Button(RectTransform parent, string caption, float x, Action action, float width = 120)
         {
             RectTransform rect = Rect(caption, parent);
             rect.anchorMin = rect.anchorMax = new Vector2(0, 1);
             rect.pivot = new Vector2(0, 1);
-            rect.anchoredPosition = new Vector2(x, -8); rect.sizeDelta = new Vector2(120, 38);
+            rect.anchoredPosition = new Vector2(x, -8); rect.sizeDelta = new Vector2(width, 38);
             AddImage(rect, new Color(0.25f, 0.21f, 0.16f));
             var button = rect.gameObject.AddComponent<Button>();
             button.targetGraphic = rect.GetComponent<Image>();
             button.onClick.AddListener(() => action());
-            Text label = Label(rect, caption, new Vector2(12, 0), new Vector2(100, 38), 20);
+            Text label = Label(rect, caption, new Vector2(12, 0), new Vector2(width - 24, 38), 20);
             return label;
         }
 

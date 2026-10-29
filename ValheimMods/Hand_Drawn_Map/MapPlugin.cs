@@ -9,7 +9,7 @@ using UnityEngine.Rendering;
 
 namespace Hand_Drawn_Map
 {
-    [BepInPlugin(Guid, "Hand Drawn Map", "0.3.1")]
+    [BepInPlugin(Guid, "Hand Drawn Map", "0.3.2")]
     [BepInProcess("valheim.exe")]
     [DefaultExecutionOrder(-10000)]
     public sealed class MapPlugin : BaseUnityPlugin
@@ -61,7 +61,7 @@ namespace Hand_Drawn_Map
                 "Show your current position and camera heading on the drawing canvas.");
             harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(MapPlugin).Assembly);
-            Logger.LogInfo("Hand Drawn Map 0.3.1 loaded.");
+            Logger.LogInfo("Hand Drawn Map 0.3.2 loaded.");
         }
 
         private void Update() => Poll();

@@ -1,4 +1,4 @@
-# Hand Drawn Map — Canvas Test 0.3.1
+# Hand Drawn Map — Canvas Test 0.3.2
 
 Local cartography prototype. Blank parchment, pencil, partial eraser, temporary annotations, pan/zoom, surveying lines, and a craftable Survey Compass. Your position is hidden by default, with an optional player marker. No terrain, automatic pins, or shared-map server component. The testing hotkey still works without an item.
 
@@ -13,6 +13,8 @@ Requires a working BepInExPack Valheim installation compatible with your game, a
 | M | Open/close canvas; configurable |
 | Escape / Close button | Close canvas |
 | Pencil / Eraser / Annotate buttons | Select drawing tool |
+| Clear: Guides | Remove all current survey lines |
+| Clear: Annotations | Remove all temporary annotation strokes |
 | Left mouse drag | Draw or erase part of a line |
 | Middle mouse drag | Pan |
 | Mouse wheel | Zoom |
@@ -21,6 +23,8 @@ Requires a working BepInExPack Valheim installation compatible with your game, a
 | Right-click, with Survey Compass equipped | Record a temporary survey line |
 
 Survey lines extend across the canvas in both directions, without marking where you stood. Take two readings while rotating in the same spot to locate yourself, or sight a distant feature from different positions to triangulate it. Lines fade and expire after two minutes by default. Capture bearings with the canvas closed so you can aim normally.
+
+The separate Clear section removes temporary marks immediately. Clearing guides or annotations leaves permanent ink, the other temporary mark type, and the undo history intact.
 
 ## Survey Compass
 

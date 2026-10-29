@@ -1,6 +1,6 @@
-# Hand Drawn Map — Canvas Test 0.3.0
+# Hand Drawn Map — Canvas Test 0.3.1
 
-Local cartography prototype. Blank parchment, pencil, partial eraser, temporary annotations, pan/zoom, surveying lines, and a craftable Survey Compass. No player marker, terrain, automatic pins, or shared-map server component. The testing hotkey still works without an item.
+Local cartography prototype. Blank parchment, pencil, partial eraser, temporary annotations, pan/zoom, surveying lines, and a craftable Survey Compass. Your position is hidden by default, with an optional player marker. No terrain, automatic pins, or shared-map server component. The testing hotkey still works without an item.
 
 ## Install
 
@@ -49,6 +49,9 @@ First launch creates `BepInEx/config/com.nopetrides.valheim.hand-drawn-map.cfg`:
 - `Drawing.EraserRadiusPixels`: default `14`, converted to world radius when erasing starts.
 - `Drawing.AnnotationLifetimeSeconds`: default `120` after finishing a temporary stroke.
 - `Drawing.BrushIndicatorOpacity`: default `0.2` (20% fill opacity).
+- `Map.ShowMyLocation`: default `false`. Set to `true` to show the vanilla player-marker sprite at your current position.
+
+The optional location marker refreshes just before each canvas render, including when you move on a boat while the map stays open. It uses the vanilla marker's sprite, tint, size, and camera-heading rule, projected through the drawing canvas's current pan/zoom. It hides outside the visible parchment and does not recenter the map, draw a trail, or add saved ink. Changes through a live configuration manager take effect immediately.
 
 Keyboard shortcuts support modifiers. Rebind the keys if another mod uses them. Mouse input is required for editing in this phase.
 

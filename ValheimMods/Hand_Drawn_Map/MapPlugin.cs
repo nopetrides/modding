@@ -9,7 +9,7 @@ using UnityEngine.Rendering;
 
 namespace Hand_Drawn_Map
 {
-    [BepInPlugin(Guid, "Hand Drawn Map", "0.3.0")]
+    [BepInPlugin(Guid, "Hand Drawn Map", "0.3.1")]
     [BepInProcess("valheim.exe")]
     [DefaultExecutionOrder(-10000)]
     public sealed class MapPlugin : BaseUnityPlugin
@@ -23,6 +23,7 @@ namespace Hand_Drawn_Map
         internal ConfigEntry<float> EraserPixels;
         internal ConfigEntry<float> AnnotationLifetime;
         internal ConfigEntry<float> BrushOpacity;
+        internal ConfigEntry<bool> ShowMyLocation;
         internal readonly List<SurveyGuide> Guides = new List<SurveyGuide>();
         internal ChartDocument Document;
         internal CanvasWindow Window;
@@ -56,9 +57,11 @@ namespace Hand_Drawn_Map
                 new ConfigDescription("Temporary annotation lifetime after releasing the brush.", new AcceptableValueRange<float>(5f, 1800f)));
             BrushOpacity = Config.Bind("Drawing", "BrushIndicatorOpacity", 0.2f,
                 new ConfigDescription("Opacity of the brush footprint indicator.", new AcceptableValueRange<float>(0f, 1f)));
+            ShowMyLocation = Config.Bind("Map", "ShowMyLocation", false,
+                "Show your current position and camera heading on the drawing canvas.");
             harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(MapPlugin).Assembly);
-            Logger.LogInfo("Hand Drawn Map 0.3.0 loaded.");
+            Logger.LogInfo("Hand Drawn Map 0.3.1 loaded.");
         }
 
         private void Update() => Poll();

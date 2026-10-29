@@ -21,6 +21,8 @@ namespace Hand_Drawn_Map
         private readonly RectTransform scaleBar;
         private readonly RectTransform scaleEnd;
         private readonly BrushGraphic brush;
+        private readonly Image locationMarker;
+        private Image nativeMarkerImage;
         private readonly InkHistory history = new InkHistory();
         private readonly List<Annotation> annotations = new List<Annotation>();
         private readonly Vector3[] nativeCorners = new Vector3[4];
@@ -96,6 +98,11 @@ namespace Hand_Drawn_Map
             viewport.offsetMin = new Vector2(12, 44); viewport.offsetMax = new Vector2(-12, -100);
             AddImage(viewport, new Color(0.86f, 0.81f, 0.68f));
             viewport.gameObject.AddComponent<RectMask2D>();
+            var marker = Rect("PlayerLocation", viewport);
+            locationMarker = marker.gameObject.AddComponent<Image>();
+            locationMarker.raycastTarget = false;
+            locationMarker.preserveAspect = true;
+            marker.gameObject.SetActive(false);
             var cursor = Rect("BrushFootprint", viewport);
             brush = cursor.gameObject.AddComponent<BrushGraphic>();
             brush.raycastTarget = false;
@@ -110,6 +117,7 @@ namespace Hand_Drawn_Map
             status.rectTransform.offsetMax = Vector2.zero;
             UpdateTools();
             root.SetActive(false);
+            Canvas.willRenderCanvases += UpdateLocationMarker;
         }
 
         internal void SetOpen(bool open)
@@ -124,7 +132,11 @@ namespace Hand_Drawn_Map
                 Canvas.ForceUpdateCanvases();
                 invalid = true;
             }
-            else brush.gameObject.SetActive(false);
+            else
+            {
+                brush.gameObject.SetActive(false);
+                locationMarker.gameObject.SetActive(false);
+            }
         }
 
         internal void Tick()
@@ -336,6 +348,7 @@ namespace Hand_Drawn_Map
                 batches[i].gameObject.SetActive(i < count);
                 if (i < count) batches[i].SetVerticesDirty();
             }
+            locationMarker.transform.SetAsLastSibling();
             brush.transform.SetAsLastSibling();
             invalid = false;
         }
@@ -386,6 +399,34 @@ namespace Hand_Drawn_Map
             Color tint = tool == Tool.Eraser ? new Color(0.65f, 0.15f, 0.12f) : new Color(0.12f, 0.22f, 0.3f);
             tint.a = plugin.BrushOpacity.Value;
             brush.color = tint;
+        }
+
+        private void UpdateLocationMarker()
+        {
+            if (!IsOpen) return;
+            Player player = Player.m_localPlayer;
+            if (!plugin.ShowMyLocation.Value || player == null || Minimap.instance == null)
+            { locationMarker.gameObject.SetActive(false); return; }
+            if (nativeMarkerImage == null)
+                nativeMarkerImage = Minimap.instance.m_largeMarker.GetComponentInChildren<Image>(true);
+            if (nativeMarkerImage == null)
+            { locationMarker.gameObject.SetActive(false); return; }
+            Vector3 position = player.transform.position;
+            ChartPoint point = ToScreen(new ChartPoint(position.x, position.z));
+            Vector2 local = new Vector2(point.X, point.Z);
+            if (!viewport.rect.Contains(local))
+            { locationMarker.gameObject.SetActive(false); return; }
+            locationMarker.sprite = nativeMarkerImage.overrideSprite;
+            locationMarker.color = nativeMarkerImage.color;
+            RectTransform native = nativeMarkerImage.rectTransform;
+            locationMarker.rectTransform.sizeDelta = new Vector2(
+                native.rect.width * Mathf.Abs(native.lossyScale.x),
+                native.rect.height * Mathf.Abs(native.lossyScale.y)) / canvas.scaleFactor;
+            locationMarker.rectTransform.anchoredPosition = local;
+            Camera camera = Utils.GetMainCamera();
+            float yaw = camera != null ? camera.transform.eulerAngles.y : player.transform.eulerAngles.y;
+            locationMarker.rectTransform.localRotation = Quaternion.Euler(0, 0, -yaw);
+            locationMarker.gameObject.SetActive(true);
         }
 
         private void RaiseCanvas()
@@ -477,7 +518,11 @@ namespace Hand_Drawn_Map
             return label;
         }
 
-        public void Dispose() { if (root != null) Object.Destroy(root); }
+        public void Dispose()
+        {
+            Canvas.willRenderCanvases -= UpdateLocationMarker;
+            if (root != null) Object.Destroy(root);
+        }
 
         private sealed class Annotation
         {

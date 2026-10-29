@@ -14,7 +14,7 @@ namespace Hand_Drawn_Map
     public sealed class MapPlugin : BaseUnityPlugin
     {
         public const string Guid = "com.nopetrides.valheim.hand-drawn-map";
-        public const string Version = "0.4.0";
+        public const string Version = "0.4.1";
         internal static MapPlugin Instance;
         internal ConfigEntry<KeyboardShortcut> MapKey;
 #if DEBUG
@@ -26,6 +26,7 @@ namespace Hand_Drawn_Map
         internal ConfigEntry<float> AnnotationLifetime;
         internal ConfigEntry<float> BrushOpacity;
         internal ConfigEntry<bool> ShowMyLocation;
+        internal ConfigEntry<bool> PersonalMapOnly;
         internal readonly List<SurveyGuide> Guides = new List<SurveyGuide>();
         internal ChartDocument Document;
         internal CanvasWindow Window;
@@ -66,6 +67,8 @@ namespace Hand_Drawn_Map
                 new ConfigDescription("Opacity of the brush footprint indicator.", new AcceptableValueRange<float>(0f, 1f)));
             ShowMyLocation = Config.Bind("Map", "ShowMyLocation", false,
                 "Show your current position and camera heading on the drawing canvas.");
+            PersonalMapOnly = Config.Bind("Map", "PersonalMapOnly", false,
+                "Use a personal map immediately, without connecting to the host's shared map.");
             Shared = new MapSession(this);
             harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(MapPlugin).Assembly);

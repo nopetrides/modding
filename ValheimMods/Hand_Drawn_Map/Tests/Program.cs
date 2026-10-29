@@ -296,4 +296,5 @@ finally
     Directory.Delete(folder);
 }
 SharedMapTests.Run(Test);
+MapSessionTests.Run(Test);
 Console.WriteLine($"{passed} checks passed.");

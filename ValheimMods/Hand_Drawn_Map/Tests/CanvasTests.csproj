@@ -11,5 +11,6 @@
     <Compile Include="..\SharedMap.cs" Link="SharedMap.cs" />
     <Compile Include="..\MapWire.cs" Link="MapWire.cs" />
     <Compile Include="..\MapJournal.cs" Link="MapJournal.cs" />
+    <Compile Include="..\MapSession.cs" Link="MapSession.cs" />
   </ItemGroup>
 </Project>

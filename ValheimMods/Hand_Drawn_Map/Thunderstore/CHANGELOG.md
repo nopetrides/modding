@@ -1,3 +1,10 @@
+# 0.4.1
+
+- Personal maps work when the host has no compatible shared map, without disconnecting the player.
+- Added PersonalMapOnly, disabled by default, to use a personal map immediately.
+- Personal drawings stay separate from shared maps and save per character and world.
+- Shared hosts allow players who use personal maps or do not have the mod.
+
 # 0.4.0
 
 - Draw and erase together on one shared map, with immediate drawing for each player.

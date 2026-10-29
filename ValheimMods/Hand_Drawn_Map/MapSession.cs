@@ -36,9 +36,11 @@ namespace Hand_Drawn_Map
         private double clockOffset;
         private Download download;
         private bool syncing;
+        private bool personal, personalOnly;
+        private long character;
         internal readonly List<TemporaryInk> Annotations = new List<TemporaryInk>();
         internal bool CanEdit => replica.Ready && !syncing && !ownerFailed && replica.Pending.Count < 256 && inflight.Count < 256;
-        internal string Status => ownerError ?? (ownerFailed ? "Map owner is read-only" : null) ?? replica.Error ?? (syncing ? "Downloading shared map..." : !replica.Ready ? "Connecting to map owner..." : replica.Pending.Count > 0 ? "Pending edits: " + replica.Pending.Count : "Shared map");
+        internal string Status => ownerError ?? (ownerFailed ? "Map is read-only" : null) ?? replica.Error ?? (syncing ? "Downloading shared map..." : !replica.Ready ? "Connecting to map owner..." : replica.Pending.Count > 0 ? "Pending edits: " + replica.Pending.Count : personal ? "Personal map" : "Shared map");
         internal double Now => UtcNow + clockOffset;
         private static double UtcNow => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0;
 
@@ -49,7 +51,7 @@ namespace Hand_Drawn_Map
             public long Actor;
             public bool Welcomed;
             public readonly MapEditorGuard Guard = new MapEditorGuard();
-            public float AuthAt, LastSnapshot = -100;
+            public float LastSnapshot = -100;
             public readonly Dictionary<Guid, string> Rejected = new Dictionary<Guid, string>();
         }
         private sealed class Transfer
@@ -105,19 +107,23 @@ namespace Hand_Drawn_Map
             if (net.GetWorld() == null) return;
             long world = net.GetWorldUID();
             if (world == 0) return;
-            if (net.IsServer() && owner == null && (net.IsDedicated() || plugin.Headless || Player.m_localPlayer != null && Player.m_localPlayer.GetPlayerID() != 0)) StartOwner(world);
-            if (owner != null && (!net.IsServer() || ownerWorld != world)) StopOwner();
-            if (!net.IsDedicated() && !plugin.Headless && (clientWorld != world || net.IsServer() && owner != null && !replica.Ready)) StartClient(world);
+            long player = Player.m_localPlayer == null ? 0 : Player.m_localPlayer.GetPlayerID();
+            if (clientWorld != 0 && (clientWorld != world || character != player || personalOnly != plugin.PersonalMapOnly.Value))
+            {
+                plugin.Window?.FinishSharedGesture(); Flush(); StopOwner(); ResetClient();
+            }
+            if (owner != null && ownerWorld != world) StopOwner();
+            bool hasPlayer = !net.IsDedicated() && !plugin.Headless && player != 0;
+            if (plugin.PersonalMapOnly.Value)
+            {
+                if (hasPlayer && !personal) StartPersonal(world);
+                if (!hasPlayer) { StopOwner(); return; }
+            }
+            if (!personal && !plugin.PersonalMapOnly.Value && net.IsServer() && owner == null && (net.IsDedicated() || plugin.Headless || hasPlayer)) StartOwner(world);
+            if (hasPlayer && (clientWorld != world || owner != null && !replica.Ready)) StartClient(world);
             foreach (Peer peer in peers.Values.ToArray())
             {
                 if (!net.GetPeers().Contains(peer.Network)) { peers.Remove(peer.Network.m_rpc); transfers.RemoveAll(t => t.Peer == peer); continue; }
-                if (peer.Network.m_uid == 0) continue;
-                if (peer.AuthAt == 0) peer.AuthAt = Time.unscaledTime;
-                if (net.IsServer() && !peer.Welcomed && Time.unscaledTime - peer.AuthAt > 20)
-                {
-                    peer.Network.m_rpc.Invoke("Error", (int)ZNet.ConnectionStatus.ErrorVersion);
-                    net.Disconnect(peer.Network);
-                }
             }
             if (journal != null)
             {
@@ -134,12 +140,12 @@ namespace Hand_Drawn_Map
                         MapEdit edit = waitingCommits[0]; waitingCommits.RemoveAt(0);
                         published.Apply(edit);
                         if (clientWorld == ownerWorld && replica.Ready) Accept(edit);
-                        foreach (Peer peer in peers.Values.Where(p => p.Welcomed))
+                        foreach (Peer peer in peers.Values.Where(p => !personal && p.Welcomed))
                             Send(peer, Message.Commit, writer => MapWire.WriteEdit(writer, edit));
                     }
             }
-            if (owner != null) PumpTransfers();
-            if (!net.IsServer() && clientWorld == world)
+            if (owner != null && !personal) PumpTransfers();
+            if (!personal && !net.IsServer() && clientWorld == world)
             {
                 ZNetPeer server = net.GetServerPeer();
                 if (server != null && server.m_uid != 0 && !replica.Ready && !syncing && Time.unscaledTime - helloAt > 2)
@@ -148,16 +154,19 @@ namespace Hand_Drawn_Map
                     if (peers.TryGetValue(server.m_rpc, out Peer peer)) Send(peer, Message.Hello, writer => { writer.Write(MapPlugin.Version); writer.Write(world); });
                 }
                 if (server == null && replica.Ready) { SaveRecovery(); replica.Ready = false; }
-                if (server != null && clientSession == Guid.Empty && Time.unscaledTime - clientStarted > 30)
-                { replica.Error = "Server requires a matching Hand Drawn Map installation"; net.Disconnect(server); }
-                if (Time.unscaledTime >= nextSend && server != null && clientSession != Guid.Empty && !syncing)
+                if (server != null && clientSession == Guid.Empty && Time.unscaledTime - clientStarted > 10)
+                {
+                    StartPersonal(world);
+                    plugin.LogMapInfo("No shared map response; using a personal map for this session.");
+                }
+                if (!personal && Time.unscaledTime >= nextSend && server != null && clientSession != Guid.Empty && !syncing)
                 {
                     nextSend = Time.unscaledTime + 0.05f;
                     if (peers.TryGetValue(server.m_rpc, out Peer peer))
                         foreach (MapEdit edit in outgoing.ToArray())
                         { Send(peer, Message.Edit, writer => { writer.Write(clientSession.ToByteArray()); MapWire.WriteEdit(writer, edit); }); outgoing.Remove(edit); }
                 }
-                if (replica.Ready && Time.unscaledTime > nextPing && server != null && peers.TryGetValue(server.m_rpc, out Peer pingPeer))
+                if (!personal && replica.Ready && Time.unscaledTime > nextPing && server != null && peers.TryGetValue(server.m_rpc, out Peer pingPeer))
                 { nextPing = Time.unscaledTime + 3; Send(pingPeer, Message.Ping, writer => writer.Write(replica.Confirmed.Revision)); }
             }
             if (syncing && Time.unscaledTime - syncStarted > 30)
@@ -169,14 +178,16 @@ namespace Hand_Drawn_Map
         private void StartOwner(long world)
         {
             ownerWorld = world;
-            string path = Path.Combine(Paths.ConfigPath, MapPlugin.Guid, "shared", world + ".journal");
+            string path = personal
+                ? Path.Combine(Paths.ConfigPath, MapPlugin.Guid, "personal", world + "_" + Player.m_localPlayer.GetPlayerID() + ".journal")
+                : Path.Combine(Paths.ConfigPath, MapPlugin.Guid, "shared", world + ".journal");
             try
             {
                 bool fresh = !File.Exists(path);
                 journal = new MapJournal(path, world);
                 owner = journal.Loaded;
                 ownerFailed = journal.Corrupt;
-                if (ownerFailed) ownerError = "Shared map journal is damaged; valid ink loaded read-only";
+                if (ownerFailed) ownerError = "Map save is damaged; recovered drawings are read-only";
                 if (fresh && !ZNet.instance.IsDedicated() && !plugin.Headless) ImportPersonalMap(world);
                 published = owner.Fork();
             }
@@ -184,7 +195,7 @@ namespace Hand_Drawn_Map
             {
                 owner = new SharedMap(); ownerFailed = true;
                 published = new SharedMap();
-                ownerError = "Shared map could not be loaded; editing paused";
+                ownerError = "Map could not be loaded; editing paused";
                 plugin.LogToolError(exception);
             }
         }
@@ -212,15 +223,27 @@ namespace Hand_Drawn_Map
                 if (owner.Prepare(end, 0, UtcNow, 120, out MapEdit closed, out _)) { owner.Apply(closed); journal.Append(closed); }
             }
             journal.Flush();
-            plugin.LogMapInfo("Imported the host's existing personal ink into the new shared map; original file retained.");
+            plugin.LogMapInfo("Imported existing personal ink into the new " + (personal ? "personal" : "shared") + " map; original file retained.");
+        }
+
+        private void StartPersonal(long world)
+        {
+            plugin.Window?.FinishSharedGesture();
+            Flush(); StopOwner(); ResetClient();
+            personal = true;
+            StartOwner(world);
+            StartClient(world);
         }
 
         private void StartClient(long world)
         {
-            ResetClient(); clientWorld = world;
+            bool local = personal;
+            ResetClient(); clientWorld = world; personal = local;
+            personalOnly = plugin.PersonalMapOnly.Value;
+            character = Player.m_localPlayer == null ? 0 : Player.m_localPlayer.GetPlayerID();
             localGuard = new MapEditorGuard();
             clientStarted = Time.unscaledTime;
-            if (ZNet.instance.IsServer() && owner != null)
+            if ((personal || ZNet.instance.IsServer()) && owner != null)
             {
                 clientSession = Guid.NewGuid();
                 replica.Actor = NewActor();
@@ -255,7 +278,7 @@ namespace Hand_Drawn_Map
             if (!replica.Propose(edit, Now)) { Refresh(); return false; }
             sequence++;
             Refresh();
-            if (ZNet.instance.IsServer()) ProcessEdit(null, edit);
+            if (personal || ZNet.instance.IsServer()) ProcessEdit(null, edit);
             else { outgoing.Add(edit); inflight.Add(edit.Id, edit); }
             return true;
         }
@@ -304,7 +327,7 @@ namespace Hand_Drawn_Map
             }
         }
         private void RejectAll(Guid id, string reason)
-        { Reject(null, id, reason); foreach (Peer peer in peers.Values.Where(p => p.Welcomed)) Reject(peer, id, reason); }
+        { Reject(null, id, reason); foreach (Peer peer in peers.Values.Where(p => !personal && p.Welcomed)) Reject(peer, id, reason); }
 
         private void Accept(MapEdit edit)
         {
@@ -318,7 +341,7 @@ namespace Hand_Drawn_Map
         {
             if (clientWorld == 0) return;
             plugin.Window?.FinishSharedGesture();
-            if (ZNet.instance != null && ZNet.instance.IsServer())
+            if (personal || ZNet.instance != null && ZNet.instance.IsServer())
             {
                 journal?.Flush();
                 if (owner != null && !ownerFailed) replica.Snapshot(owner.Fork(), Now);
@@ -334,6 +357,7 @@ namespace Hand_Drawn_Map
 
         private void Receive(Peer peer, ZPackage package)
         {
+            if (personal || plugin.PersonalMapOnly.Value) return;
             try
             {
                 if (package.Size() > MapWire.MaxPacket) throw new InvalidDataException("Map packet too large");
@@ -363,8 +387,7 @@ namespace Hand_Drawn_Map
                 string version = reader.ReadString(); long world = reader.ReadInt64();
                 MapWire.End(reader);
                 if (owner == null) return;
-                if (version != MapPlugin.Version || world != ownerWorld)
-                { ZNet.instance.Disconnect(peer.Network); return; }
+                if (version != MapPlugin.Version || world != ownerWorld) return;
                 if (!peer.Welcomed) { peer.Session = Guid.NewGuid(); peer.Actor = NewActor(); peer.Welcomed = true; }
                 Send(peer, Message.Welcome, writer =>
                 { writer.Write(peer.Session.ToByteArray()); writer.Write(ownerWorld); writer.Write(peer.Actor); writer.Write(UtcNow); writer.Write(ownerFailed); writer.Write(plugin.AnnotationLifetime.Value); });
@@ -536,6 +559,7 @@ namespace Hand_Drawn_Map
             if (clientWorld == 0) return;
             SaveRecovery();
             replica = new MapReplica(); clientWorld = 0; clientSession = Guid.Empty; sequence = 0;
+            personal = false; personalOnly = false; character = 0;
             outgoing.Clear(); inflight.Clear(); received.Clear(); syncing = false; download = null; clockOffset = 0;
         }
         private void StopOwner()
@@ -545,7 +569,7 @@ namespace Hand_Drawn_Map
         }
         internal void Flush()
         {
-            if (ZNet.instance != null && !ZNet.instance.IsServer())
+            if (!personal && ZNet.instance != null && !ZNet.instance.IsServer())
             {
                 ZRpc rpc = ZNet.instance.GetServerRPC();
                 if (rpc != null && peers.TryGetValue(rpc, out Peer peer))

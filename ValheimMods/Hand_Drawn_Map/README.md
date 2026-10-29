@@ -1,4 +1,4 @@
-# Hand Drawn Map v 0.4.0
+# Hand Drawn Map v 0.4.1
 
 Draw the map by hand. A blank parchment with a pencil, eraser, fading annotations and a craftable Survey Compass. Coastlines, landmarks and paths appear only where they are drawn. The player marker is disabled by default.
 
@@ -10,7 +10,7 @@ Intended for no-map adventures, but also works in worlds with the vanilla map en
 
 Requires [BepInEx](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). Install through a mod manager, or place `Hand_Drawn_Map.dll` in `BepInEx/plugins`.
 
-For multiplayer, install the same mod version for every player and on the server. Supports worlds hosted by a player and dedicated servers. The host or server saves the shared map.
+For shared drawing, install the same mod version on the host or server and on each participating player's game. Supports worlds hosted by a player and dedicated servers. The host or server saves the shared map. Players can also use personal maps without joining shared drawing.
 
 ## Tools and controls
 
@@ -36,6 +36,14 @@ Craft at a level 1 workbench:
 Equip in hand, look towards a point of interest and right click with the map closed. A temporary guide line is drawn across the map in both directions. The compass is not consumed.
 
 Take two readings from the same position while turning to find your position where the lines cross. To locate a distant landmark, sight it from two different positions and mark where those lines cross.
+
+## Personal maps
+
+If the host has no compatible shared map, a personal map opens after a 10-second connection attempt. This does not disconnect the player from the game.
+
+Set `PersonalMapOnly = true` under `[Map]` in the config file to use a personal map immediately, without trying to connect to the host's map. Disabled by default. A host using this setting also keeps their map personal.
+
+Personal drawings save separately for each character and world. They are not sent to other players or merged into shared maps. Resync reloads the personal map while in this mode.
 
 ## Settings
 

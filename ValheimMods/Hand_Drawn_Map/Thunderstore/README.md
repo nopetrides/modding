@@ -1,8 +1,8 @@
-# Hand Drawn Map v 0.3.3
+# Hand Drawn Map v 0.4.0
 
 Draw the map by hand. Blank parchment with a pencil, eraser, temporary annotations and survey guides, intended for no-map worlds.
 
-**Work in progress. Client only.** Functional in multiplayer, but each player has a personal map at present. Maps are saved locally per world and character and are not directly shareable. Dedicated servers do not need this installed.
+**Work in progress. Shared map test build.** The world owner holds the map. Players draw and erase together, with immediate local editing. No cartography table needed. The same version must be installed on the host/server and every client. Solo, player-hosted and dedicated-server paths are included; live multiplayer playtesting is still needed.
 
 Dependant on [BepInEx](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). No additional library required.
 
@@ -26,29 +26,31 @@ Take two readings from the same position while turning to find where they cross.
 - Middle mouse drag: Pan map.
 - Mouse wheel: Zoom.
 - Ctrl+Z: Undo permanent drawing and erasing, one gesture at a time.
+- Resync: Download the current owner map and reconcile pending edits.
 
-Pencil draws permanent ink. Annotate draws fading ink. Clear Guides and Clear Annotations remove their respective temporary marks.
+Pencil draws shared permanent ink. Anyone may erase visible ink. Annotate draws shared fading ink. Clear Annotations clears temporary ink for everyone. Survey guides and Clear Guides remain local.
 
 # Configurables:
 
 - Map keybind
 - Pencil width, eraser radius and brush indicator opacity
-- Survey guide and annotation lifetimes
+- Local survey guide lifetime and owner-controlled annotation lifetime
 - Show my location, disabled by default
 
 See `BepInEx/config/com.nopetrides.valheim.hand-drawn-map.cfg` after first launch.
 
 # Limitations:
 
-- Personal maps only. No shared drawing or direct map sharing yet.
+- Matching mod required on the owner and all clients.
 - Mouse input required for drawing.
-- Undo history lasts for the current world session. Temporary marks are not included.
+- Undo affects only the latest 50 own drawing/erasing gestures. Temporary marks are not included.
+- Shared ink saves on the owner. Back up the mod's `shared/` directory with the world. Old personal files remain untouched; a new locally hosted shared map is seeded from the host character's old drawing.
 - Mod compatibility is not guaranteed.
 
-Future plans include multiplayer shared drawing. Feedback and suggestions welcome.
+Feedback and suggestions welcome.
 
 # Changelog:
 
-0.3.3
+0.4.0
 
-Initial WIP package. Includes the Survey Compass, drawing tools, metric scale, temporary marks, undo and optional player marker. Debug survey hotkey excluded from release builds.
+Owner/client shared drawing, streamed edits, optimistic local rendering, per-editor undo, shared annotations, Resync and recoverable owner storage. Debug survey hotkey remains excluded from Release builds.

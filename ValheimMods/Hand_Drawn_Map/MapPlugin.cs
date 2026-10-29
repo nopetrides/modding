@@ -51,24 +51,24 @@ namespace Hand_Drawn_Map
         {
             headless = SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null;
             Instance = this;
-            MapKey = Config.Bind("Controls", "OpenMap", new KeyboardShortcut(KeyCode.M), "Open or close the drawing canvas.");
+            MapKey = Config.Bind("Controls", "OpenMap", new KeyboardShortcut(KeyCode.M), "[Local] Open or close the drawing canvas.");
 #if DEBUG
-            SurveyKey = Config.Bind("Controls", "SurveyLine", new KeyboardShortcut(KeyCode.F8), "Capture a temporary full-map bearing while looking into the world. No item required.");
+            SurveyKey = Config.Bind("Controls", "SurveyLine", new KeyboardShortcut(KeyCode.F8), "[Local] Capture a temporary full-map bearing while looking into the world. No item required.");
 #endif
             SurveyLifetime = Config.Bind("Drawing", "SurveyLifetimeSeconds", 120f,
-                new ConfigDescription("Survey guide lifetime.", new AcceptableValueRange<float>(5f, 1800f)));
+                new ConfigDescription("[Local] How long your personal survey guides last.", new AcceptableValueRange<float>(5f, 1800f)));
             PencilPixels = Config.Bind("Drawing", "PencilWidthPixels", 2.5f,
-                new ConfigDescription("Pencil width at the start of a stroke. The resulting ink stays in world units.", new AcceptableValueRange<float>(1f, 16f)));
+                new ConfigDescription("[Local] Width of new pencil and annotation strokes. Everyone sees the resulting ink at the same size.", new AcceptableValueRange<float>(1f, 16f)));
             EraserPixels = Config.Bind("Drawing", "EraserRadiusPixels", 14f,
-                new ConfigDescription("Eraser radius at the start of a gesture.", new AcceptableValueRange<float>(3f, 100f)));
+                new ConfigDescription("[Local] Size of your eraser. Shared-map erasing is visible to everyone.", new AcceptableValueRange<float>(3f, 100f)));
             AnnotationLifetime = Config.Bind("Drawing", "AnnotationLifetimeSeconds", 120f,
-                new ConfigDescription("Shared annotation lifetime, set by the world owner.", new AcceptableValueRange<float>(5f, 1800f)));
+                new ConfigDescription("[Server-controlled] How long annotations last. Shared maps use the host or server's value for everyone; your value applies only when hosting or using a personal map.", new AcceptableValueRange<float>(5f, 1800f)));
             BrushOpacity = Config.Bind("Drawing", "BrushIndicatorOpacity", 0.2f,
-                new ConfigDescription("Opacity of the brush footprint indicator.", new AcceptableValueRange<float>(0f, 1f)));
+                new ConfigDescription("[Local] Opacity of your brush indicator.", new AcceptableValueRange<float>(0f, 1f)));
             ShowMyLocation = Config.Bind("Map", "ShowMyLocation", false,
-                "Show your current position and camera heading on the drawing canvas.");
+                "[Local] Show your current position and camera heading on the drawing canvas.");
             PersonalMapOnly = Config.Bind("Map", "PersonalMapOnly", false,
-                "Use a personal map immediately, without connecting to the host's shared map.");
+                "[Local] Use a personal map immediately, without connecting to the host's shared map.");
             Shared = new MapSession(this);
             harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(MapPlugin).Assembly);

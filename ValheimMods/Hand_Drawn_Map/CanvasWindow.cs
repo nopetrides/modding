@@ -206,8 +206,12 @@ namespace Hand_Drawn_Map
             if (invalid) Rebuild();
             UpdateScale();
             UpdateBrush(local, inside);
+            string surveyHint = "Right-click: survey with compass";
+#if DEBUG
+            surveyHint += $" / {plugin.SurveyKey.Value}";
+#endif
             status.text = readOnly ? "Chart could not be loaded. Saving and editing are disabled; check the log and restore the .bak file."
-                : notice ?? $"LMB: {tool}   |   Middle drag: pan   |   Wheel: zoom   |   Ctrl+Z: undo ({history.Count})   |   {plugin.MapKey.Value} / Esc: close   |   {plugin.SurveyKey.Value}: survey in world view";
+                : notice ?? $"LMB: {tool}   |   Middle drag: pan   |   Wheel: zoom   |   Ctrl+Z: undo ({history.Count})   |   {plugin.MapKey.Value} / Esc: close   |   {surveyHint}";
         }
 
         private void StartStroke(ChartPoint world)

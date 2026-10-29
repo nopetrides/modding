@@ -9,7 +9,7 @@ using UnityEngine.Rendering;
 
 namespace Hand_Drawn_Map
 {
-    [BepInPlugin(Guid, "Hand Drawn Map", "0.3.2")]
+    [BepInPlugin(Guid, "Hand Drawn Map", "0.3.3")]
     [BepInProcess("valheim.exe")]
     [DefaultExecutionOrder(-10000)]
     public sealed class MapPlugin : BaseUnityPlugin
@@ -17,7 +17,9 @@ namespace Hand_Drawn_Map
         public const string Guid = "com.nopetrides.valheim.hand-drawn-map";
         internal static MapPlugin Instance;
         internal ConfigEntry<KeyboardShortcut> MapKey;
+#if DEBUG
         internal ConfigEntry<KeyboardShortcut> SurveyKey;
+#endif
         internal ConfigEntry<float> SurveyLifetime;
         internal ConfigEntry<float> PencilPixels;
         internal ConfigEntry<float> EraserPixels;
@@ -46,7 +48,9 @@ namespace Hand_Drawn_Map
             if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null) { enabled = false; return; }
             Instance = this;
             MapKey = Config.Bind("Controls", "OpenMap", new KeyboardShortcut(KeyCode.M), "Open or close the drawing canvas.");
+#if DEBUG
             SurveyKey = Config.Bind("Controls", "SurveyLine", new KeyboardShortcut(KeyCode.F8), "Capture a temporary full-map bearing while looking into the world. No item required.");
+#endif
             SurveyLifetime = Config.Bind("Drawing", "SurveyLifetimeSeconds", 120f,
                 new ConfigDescription("Survey guide lifetime.", new AcceptableValueRange<float>(5f, 1800f)));
             PencilPixels = Config.Bind("Drawing", "PencilWidthPixels", 2.5f,
@@ -61,7 +65,7 @@ namespace Hand_Drawn_Map
                 "Show your current position and camera heading on the drawing canvas.");
             harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(MapPlugin).Assembly);
-            Logger.LogInfo("Hand Drawn Map 0.3.2 loaded.");
+            Logger.LogInfo("Hand Drawn Map 0.3.3 loaded.");
         }
 
         private void Update() => Poll();
@@ -90,8 +94,11 @@ namespace Hand_Drawn_Map
                 if (IsOpen) CloseMap();
                 else if (CanUseWorldInput(player)) OpenMap();
             }
-            if (!IsOpen && (ShortcutDown(SurveyKey.Value) || SurveyTool.IsEquipped(player) && Input.GetMouseButtonDown(1))
-                && CanUseWorldInput(player)) AddSurvey(player);
+            bool survey = SurveyTool.IsEquipped(player) && Input.GetMouseButtonDown(1);
+#if DEBUG
+            survey |= ShortcutDown(SurveyKey.Value);
+#endif
+            if (!IsOpen && survey && CanUseWorldInput(player)) AddSurvey(player);
             if (IsOpen) Window.Tick();
             if (Guides.RemoveAll(guide => guide.Expires <= Time.unscaledTime) > 0) Window?.Invalidate();
             if (Dirty && Time.unscaledTime - lastSave > 5f && (Window == null || !Window.InGesture)) Save();

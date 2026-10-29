@@ -1,6 +1,6 @@
-# Hand Drawn Map — Canvas Test 0.3.2
+# Hand Drawn Map — Canvas Test 0.3.3
 
-Local cartography prototype. Blank parchment, pencil, partial eraser, temporary annotations, pan/zoom, surveying lines, and a craftable Survey Compass. Your position is hidden by default, with an optional player marker. No terrain, automatic pins, or shared-map server component. The testing hotkey still works without an item.
+Work-in-progress client-only cartography mod. Blank parchment, pencil, partial eraser, temporary annotations, pan/zoom, surveying lines, and a craftable Survey Compass. Your position is hidden by default, with an optional player marker. Functional in multiplayer as a personal map; maps are saved locally and are not directly shareable. Shared drawing is planned.
 
 ## Install
 
@@ -19,7 +19,6 @@ Requires a working BepInExPack Valheim installation compatible with your game, a
 | Middle mouse drag | Pan |
 | Mouse wheel | Zoom |
 | Ctrl+Z | Undo the latest permanent drawing or erase gesture |
-| F8, while looking into the world | Record a temporary survey line; configurable |
 | Right-click, with Survey Compass equipped | Record a temporary survey line |
 
 Survey lines extend across the canvas in both directions, without marking where you stood. Take two readings while rotating in the same spot to locate yourself, or sight a distant feature from different positions to triangulate it. Lines fade and expire after two minutes by default. Capture bearings with the canvas closed so you can aim normally.
@@ -28,7 +27,7 @@ The separate Clear section removes temporary marks immediately. Clearing guides 
 
 ## Survey Compass
 
-Craft one at a level 1 workbench using **4 fine wood, 1 bronze nail, and 12 coal**. Discover the ingredients to learn the recipe normally. Equip it from your inventory or hotbar, aim, and right-click. It records the same temporary local guide as F8 and displays: "You sketch a guide line across your map." Attacks and blocking are suppressed only while this tool is in your right hand. It has no durability or charges.
+Craft one at a level 1 workbench using **4 fine wood, 1 bronze nail, and 12 coal**. Discover the ingredients to learn the recipe normally. Equip it in hand from your inventory or hotbar, aim with the map closed, and right-click. It records a temporary local guide and displays: "You sketch a guide line across your map." Attacks and blocking are suppressed only while this tool is in your right hand. It has no durability or charges.
 
 The item uses a separate prefab, `NPR_SurveyCompass`, with its own equipment data and recipe. It reuses the icon and copies mesh/material visuals from `Catapult_Ammo_BloodGold`; the held visual is scaled to hand size and contains no payload scripts or physics. If that payload prefab is unavailable, it uses a tankard visual and logs the fallback. The original ammunition and its recipe remain unmodified. Registration uses the game's database/prefab lifecycle and requires no additional library.
 
@@ -47,7 +46,6 @@ Undo groups an entire mouse gesture, including long strokes and multi-frame eras
 First launch creates `BepInEx/config/com.nopetrides.valheim.hand-drawn-map.cfg`:
 
 - `Controls.OpenMap`: default `M`.
-- `Controls.SurveyLine`: default `F8`.
 - `Drawing.SurveyLifetimeSeconds`: default `120`.
 - `Drawing.PencilWidthPixels`: default `2.5`, converted to world width when drawing starts.
 - `Drawing.EraserRadiusPixels`: default `14`, converted to world radius when erasing starts.
@@ -73,6 +71,8 @@ dotnet run --project ValheimMods/Hand_Drawn_Map/Tests/CanvasTests.csproj -c Rele
 ```
 
 Override the game location with `-p:ValheimDir=...` or the managed folder with `-p:ValheimManaged=...`. The build copies the plugin to `dist/Hand_Drawn_Map.dll`.
+
+Run `./ValheimMods/Hand_Drawn_Map/BuildPackage.ps1` to build and validate the Thunderstore ZIP. Its concise public README and manifest are in `Thunderstore/`. The debug survey hotkey, its configuration entry, and its UI hint are compiled only in Debug builds. Release surveying requires the equipped compass.
 
 The automated checks cover transforms, swept partial erasing, metric scaling, gesture undo, conflicts, history bounds, and persistence/recovery rejection. The 0.1.1 input path was confirmed in-game. The Survey Compass still needs an in-game check for recipe discovery, equipment appearance, right-click guides, drop/pickup, and character reload. Verify that regular Bloodgold Payload remains a non-equippable material.
 

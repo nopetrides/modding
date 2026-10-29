@@ -1,6 +1,6 @@
-# Hand Drawn Map — Canvas Test 0.2.0
+# Hand Drawn Map — Canvas Test 0.3.0
 
-Local cartography prototype. Blank parchment, pencil, partial eraser, temporary annotations, pan/zoom, and surveying lines. No player marker, terrain, automatic pins, server component, or required item.
+Local cartography prototype. Blank parchment, pencil, partial eraser, temporary annotations, pan/zoom, surveying lines, and a craftable Survey Compass. No player marker, terrain, automatic pins, or shared-map server component. The testing hotkey still works without an item.
 
 ## Install
 
@@ -18,8 +18,17 @@ Requires a working BepInExPack Valheim installation compatible with your game, a
 | Mouse wheel | Zoom |
 | Ctrl+Z | Undo the latest permanent drawing or erase gesture |
 | F8, while looking into the world | Record a temporary survey line; configurable |
+| Right-click, with Survey Compass equipped | Record a temporary survey line |
 
 Survey lines extend across the canvas in both directions, without marking where you stood. Take two readings while rotating in the same spot to locate yourself, or sight a distant feature from different positions to triangulate it. Lines fade and expire after two minutes by default. Capture bearings with the canvas closed so you can aim normally.
+
+## Survey Compass
+
+Craft one at a level 1 workbench using **4 fine wood, 1 bronze nail, and 12 coal**. Discover the ingredients to learn the recipe normally. Equip it from your inventory or hotbar, aim, and right-click. It records the same temporary local guide as F8 and displays: "You sketch a guide line across your map." Attacks and blocking are suppressed only while this tool is in your right hand. It has no durability or charges.
+
+The item uses a separate prefab, `NPR_SurveyCompass`, with its own equipment data and recipe. It reuses the icon and copies mesh/material visuals from `Catapult_Ammo_BloodGold`; the held visual is scaled to hand size and contains no payload scripts or physics. If that payload prefab is unavailable, it uses a tankard visual and logs the fallback. The original ammunition and its recipe remain unmodified. Registration uses the game's database/prefab lifecycle and requires no additional library.
+
+For developer testing: `spawn NPR_SurveyCompass 1`. The compass is currently intended for local testing; shared-map multiplayer functionality remains deferred.
 
 The canvas uses the installed vanilla map's world extent, zoom range, and wheel-step formula. It matches its vertical world-to-screen scale at a given zoom. Drawings and line widths stay anchored to world coordinates as you pan and zoom. The initial view is centered on world origin; reopening keeps your view rather than centering on your character.
 
@@ -58,7 +67,9 @@ dotnet run --project ValheimMods/Hand_Drawn_Map/Tests/CanvasTests.csproj -c Rele
 
 Override the game location with `-p:ValheimDir=...` or the managed folder with `-p:ValheimManaged=...`. The build copies the plugin to `dist/Hand_Drawn_Map.dll`.
 
-The automated checks cover transforms, swept partial erasing, metric scaling, gesture undo, conflicts, history bounds, and persistence/recovery rejection. The 0.1.1 input path was confirmed in-game; the 0.2.0 layout, layering, cursor, and annotation changes still require a playtest.
+The automated checks cover transforms, swept partial erasing, metric scaling, gesture undo, conflicts, history bounds, and persistence/recovery rejection. The 0.1.1 input path was confirmed in-game. The Survey Compass still needs an in-game check for recipe discovery, equipment appearance, right-click guides, drop/pickup, and character reload. Verify that regular Bloodgold Payload remains a non-equippable material.
+
+Equipment implementation references: [Jotunn's item cloning tutorial](https://valheim-modding.github.io/Jotunn/tutorials/items.html) and [generated item list](https://valheim-modding.github.io/Jotunn/data/objects/item-list.html). The actual attachment, equipability, database registration, and control hooks were checked against the installed game assemblies; this mod does not depend on Jotunn.
 
 ## Later multiplayer direction
 

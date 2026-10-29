@@ -9,7 +9,7 @@ using UnityEngine.Rendering;
 
 namespace Hand_Drawn_Map
 {
-    [BepInPlugin(Guid, "Hand Drawn Map", "0.2.0")]
+    [BepInPlugin(Guid, "Hand Drawn Map", "0.3.0")]
     [BepInProcess("valheim.exe")]
     [DefaultExecutionOrder(-10000)]
     public sealed class MapPlugin : BaseUnityPlugin
@@ -58,7 +58,7 @@ namespace Hand_Drawn_Map
                 new ConfigDescription("Opacity of the brush footprint indicator.", new AcceptableValueRange<float>(0f, 1f)));
             harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(MapPlugin).Assembly);
-            Logger.LogInfo("Hand Drawn Map 0.2.0 loaded.");
+            Logger.LogInfo("Hand Drawn Map 0.3.0 loaded.");
         }
 
         private void Update() => Poll();
@@ -87,7 +87,8 @@ namespace Hand_Drawn_Map
                 if (IsOpen) CloseMap();
                 else if (CanUseWorldInput(player)) OpenMap();
             }
-            if (!IsOpen && ShortcutDown(SurveyKey.Value) && CanUseWorldInput(player)) AddSurvey(player);
+            if (!IsOpen && (ShortcutDown(SurveyKey.Value) || SurveyTool.IsEquipped(player) && Input.GetMouseButtonDown(1))
+                && CanUseWorldInput(player)) AddSurvey(player);
             if (IsOpen) Window.Tick();
             if (Guides.RemoveAll(guide => guide.Expires <= Time.unscaledTime) > 0) Window?.Invalidate();
             if (Dirty && Time.unscaledTime - lastSave > 5f && (Window == null || !Window.InGesture)) Save();
@@ -169,8 +170,11 @@ namespace Hand_Drawn_Map
                 Expires = Time.unscaledTime + SurveyLifetime.Value
             });
             Window.Invalidate();
-            if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.TopLeft, "Survey line recorded");
+            if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.TopLeft, "You sketch a guide line across your map.");
         }
+
+        internal void LogToolError(Exception exception) => Logger.LogError("Survey Compass registration failed: " + exception);
+        internal void LogToolWarning(string message) => Logger.LogWarning(message);
 
         internal void Save()
         {

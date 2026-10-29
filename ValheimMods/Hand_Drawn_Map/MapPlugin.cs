@@ -9,12 +9,12 @@ using UnityEngine.Rendering;
 
 namespace Hand_Drawn_Map
 {
-    [BepInPlugin(Guid, "Hand Drawn Map", "0.3.3")]
-    [BepInProcess("valheim.exe")]
+    [BepInPlugin(Guid, "Hand Drawn Map", Version)]
     [DefaultExecutionOrder(-10000)]
     public sealed class MapPlugin : BaseUnityPlugin
     {
         public const string Guid = "com.nopetrides.valheim.hand-drawn-map";
+        public const string Version = "0.4.1";
         internal static MapPlugin Instance;
         internal ConfigEntry<KeyboardShortcut> MapKey;
 #if DEBUG
@@ -26,10 +26,14 @@ namespace Hand_Drawn_Map
         internal ConfigEntry<float> AnnotationLifetime;
         internal ConfigEntry<float> BrushOpacity;
         internal ConfigEntry<bool> ShowMyLocation;
+        internal ConfigEntry<bool> PersonalMapOnly;
         internal readonly List<SurveyGuide> Guides = new List<SurveyGuide>();
         internal ChartDocument Document;
         internal CanvasWindow Window;
         internal bool Dirty;
+        internal MapSession Shared;
+        private bool headless;
+        internal bool Headless => headless;
         private Harmony harmony;
         private string savePath;
         private bool saveBlocked;
@@ -45,35 +49,43 @@ namespace Hand_Drawn_Map
 
         private void Awake()
         {
-            if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null) { enabled = false; return; }
+            headless = SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null;
             Instance = this;
-            MapKey = Config.Bind("Controls", "OpenMap", new KeyboardShortcut(KeyCode.M), "Open or close the drawing canvas.");
+            MapKey = Config.Bind("Controls", "OpenMap", new KeyboardShortcut(KeyCode.M), "[Local] Open or close the drawing canvas.");
 #if DEBUG
-            SurveyKey = Config.Bind("Controls", "SurveyLine", new KeyboardShortcut(KeyCode.F8), "Capture a temporary full-map bearing while looking into the world. No item required.");
+            SurveyKey = Config.Bind("Controls", "SurveyLine", new KeyboardShortcut(KeyCode.F8), "[Local] Capture a temporary full-map bearing while looking into the world. No item required.");
 #endif
             SurveyLifetime = Config.Bind("Drawing", "SurveyLifetimeSeconds", 120f,
-                new ConfigDescription("Survey guide lifetime.", new AcceptableValueRange<float>(5f, 1800f)));
+                new ConfigDescription("[Local] How long your personal survey guides last.", new AcceptableValueRange<float>(5f, 1800f)));
             PencilPixels = Config.Bind("Drawing", "PencilWidthPixels", 2.5f,
-                new ConfigDescription("Pencil width at the start of a stroke. The resulting ink stays in world units.", new AcceptableValueRange<float>(1f, 16f)));
+                new ConfigDescription("[Local] Width of new pencil and annotation strokes. Everyone sees the resulting ink at the same size.", new AcceptableValueRange<float>(1f, 16f)));
             EraserPixels = Config.Bind("Drawing", "EraserRadiusPixels", 14f,
-                new ConfigDescription("Eraser radius at the start of a gesture.", new AcceptableValueRange<float>(3f, 100f)));
+                new ConfigDescription("[Local] Size of your eraser. Shared-map erasing is visible to everyone.", new AcceptableValueRange<float>(3f, 100f)));
             AnnotationLifetime = Config.Bind("Drawing", "AnnotationLifetimeSeconds", 120f,
-                new ConfigDescription("Temporary annotation lifetime after releasing the brush.", new AcceptableValueRange<float>(5f, 1800f)));
+                new ConfigDescription("[Server-controlled] How long annotations last. Shared maps use the host or server's value for everyone; your value applies only when hosting or using a personal map.", new AcceptableValueRange<float>(5f, 1800f)));
             BrushOpacity = Config.Bind("Drawing", "BrushIndicatorOpacity", 0.2f,
-                new ConfigDescription("Opacity of the brush footprint indicator.", new AcceptableValueRange<float>(0f, 1f)));
+                new ConfigDescription("[Local] Opacity of your brush indicator.", new AcceptableValueRange<float>(0f, 1f)));
             ShowMyLocation = Config.Bind("Map", "ShowMyLocation", false,
-                "Show your current position and camera heading on the drawing canvas.");
+                "[Local] Show your current position and camera heading on the drawing canvas.");
+            PersonalMapOnly = Config.Bind("Map", "PersonalMapOnly", false,
+                "[Local] Use a personal map immediately, without connecting to the host's shared map.");
+            Shared = new MapSession(this);
             harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(MapPlugin).Assembly);
-            Logger.LogInfo("Hand Drawn Map 0.3.3 loaded.");
+            Logger.LogInfo("Hand Drawn Map " + Version + " loaded.");
         }
 
-        private void Update() => Poll();
+        private void Update()
+        {
+            Shared.Tick();
+            if (!headless) Poll();
+        }
 
         internal void Poll()
         {
             if (lastPoll == Time.frameCount) return;
             lastPoll = Time.frameCount;
+            Shared.Tick();
             Player player = Player.m_localPlayer;
             if (player == null || ZNet.instance == null || Minimap.instance == null)
             {
@@ -83,7 +95,7 @@ namespace Hand_Drawn_Map
             long world = ZNet.instance.GetWorldUID();
             long character = player.GetPlayerID();
             if (world == 0 || character == 0) return;
-            string path = Path.Combine(Paths.ConfigPath, Guid, world + "_" + character + ".chart");
+            string path = Path.Combine(Paths.ConfigPath, Guid, world + "_" + character + ".view.chart");
             if (path != savePath) LoadWorld(path);
 
             if (IsOpen && (!Application.isFocused || player.IsDead() || player.IsTeleporting() || player.InCutscene() || OtherUiOpen()))
@@ -130,7 +142,9 @@ namespace Hand_Drawn_Map
             try
             {
                 bool exists = File.Exists(path);
-                Document = ChartStore.Load(path);
+                string legacy = path.Replace(".view.chart", ".chart");
+                ChartDocument saved = ChartStore.Load(exists ? path : legacy);
+                Document = new ChartDocument { Center = saved.Center, Zoom = saved.Zoom };
                 if (!exists) Document.Zoom = Minimap.instance.LargeZoom;
             }
             catch (Exception exception)
@@ -139,7 +153,8 @@ namespace Hand_Drawn_Map
                 Document = new ChartDocument();
                 Logger.LogError("Chart could not be loaded; saving disabled to preserve the file: " + exception.Message);
             }
-            Window = new CanvasWindow(this, saveBlocked);
+            Window = new CanvasWindow(this, false);
+            Shared.Bind(Document, () => Window?.Invalidate());
             lastSave = Time.unscaledTime;
         }
 
@@ -185,12 +200,13 @@ namespace Hand_Drawn_Map
 
         internal void LogToolError(Exception exception) => Logger.LogError("Survey Compass registration failed: " + exception);
         internal void LogToolWarning(string message) => Logger.LogWarning(message);
+        internal void LogMapInfo(string message) => Logger.LogInfo(message);
 
         internal void Save()
         {
             if (!Dirty || savePath == null || saveBlocked) return;
             lastSave = Time.unscaledTime;
-            try { ChartStore.Save(savePath, Document); Dirty = false; }
+            try { ChartStore.Save(savePath, new ChartDocument { Center = Document.Center, Zoom = Document.Zoom }); Dirty = false; }
             catch (Exception exception) { Logger.LogError("Chart save failed: " + exception.Message); }
         }
 
@@ -198,6 +214,7 @@ namespace Hand_Drawn_Map
         {
             CloseMap();
             Save();
+            Shared?.Unbind();
             Window?.Dispose();
             Window = null;
             Document = null;
@@ -207,10 +224,11 @@ namespace Hand_Drawn_Map
         }
 
         private void OnApplicationFocus(bool focused) { if (!focused) CloseMap(); }
-        private void OnApplicationQuit() => Save();
+        private void OnApplicationQuit() { Window?.FinishSharedGesture(); Save(); Shared?.Flush(); }
         private void OnDestroy()
         {
             ReleaseWorld();
+            Shared?.Dispose();
             harmony?.UnpatchSelf();
             if (Instance == this) Instance = null;
         }
@@ -235,6 +253,22 @@ namespace Hand_Drawn_Map
         private static class MenuUpdate
         {
             private static bool Prefix() => !IsOpen && !ConsumedInput;
+        }
+
+        [HarmonyPatch(typeof(ZNet), "OnNewConnection")]
+        private static class PeerConnected
+        {
+            private static void Prefix(ZNetPeer __0) => Instance?.Shared?.Register(__0);
+        }
+
+        [HarmonyPatch(typeof(ZNet), nameof(ZNet.Shutdown))]
+        private static class WorldShutdown
+        {
+            private static void Prefix()
+            {
+                Instance?.Window?.FinishSharedGesture();
+                Instance?.Shared?.Flush();
+            }
         }
     }
 

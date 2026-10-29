@@ -23,8 +23,6 @@ namespace Hand_Drawn_Map
         private readonly BrushGraphic brush;
         private readonly Image locationMarker;
         private Image nativeMarkerImage;
-        private readonly InkHistory history = new InkHistory();
-        private readonly List<Annotation> annotations = new List<Annotation>();
         private readonly Vector3[] nativeCorners = new Vector3[4];
         private readonly bool readOnly;
         private readonly List<ChartGraphic> batches = new List<ChartGraphic>();
@@ -32,7 +30,10 @@ namespace Hand_Drawn_Map
         private bool invalid = true;
         private enum Tool { Pencil, Eraser, Annotate }
         private Tool tool;
-        private Annotation activeAnnotation;
+        private bool activeTemporary;
+        private Guid gesture;
+        private bool gestureSubmitted, unsentPoints;
+        private float nextStrokeSend;
         private float nextFadeRefresh;
         private bool panning;
         private bool erasing;
@@ -91,6 +92,7 @@ namespace Hand_Drawn_Map
             clearLabel.rectTransform.anchorMin = clearLabel.rectTransform.anchorMax = new Vector2(0, 1);
             Button(header, "Guides", 920, ClearGuides);
             Button(header, "Annotations", 1050, ClearAnnotations, 150);
+            Button(header, "Resync", 1230, () => plugin.Shared.RequestResync());
             scaleLabel = Label(header, "", new Vector2(300, -59), new Vector2(200, 24), 17);
             scaleLabel.rectTransform.anchorMin = scaleLabel.rectTransform.anchorMax = new Vector2(0, 1);
             scaleBar = ScalePart(header, new Vector2(300, -82), new Vector2(180, 2));
@@ -149,12 +151,10 @@ namespace Hand_Drawn_Map
             ZCursor.LockState = CursorLockMode.None;
             ZCursor.Show();
             MatchNativeBounds();
-            if (annotations.RemoveAll(annotation => annotation != activeAnnotation && annotation.Expires <= Time.unscaledTime) > 0) invalid = true;
-            if (!readOnly && Input.GetKeyDown(KeyCode.Z) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+            if (!readOnly && plugin.Shared.CanEdit && Input.GetKeyDown(KeyCode.Z) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
             {
                 FinishGesture();
-                if (history.Undo(Document, out bool conflict)) { notice = null; Changed(); }
-                else notice = conflict ? "Undo skipped: affected ink has changed." : "Nothing to undo.";
+                notice = plugin.Shared.Undo() ? null : plugin.Shared.Status;
             }
             Vector2 pointer = ZInput.pointerPosition;
             bool inside = RectTransformUtility.RectangleContainsScreenPoint(viewport, pointer, null);
@@ -178,30 +178,30 @@ namespace Hand_Drawn_Map
                     Changed();
                 }
             }
-            if (inside && !InGesture && !readOnly && ZInput.GetMouseButtonDown(0))
+            if (inside && !InGesture && !readOnly && plugin.Shared.CanEdit && ZInput.GetMouseButtonDown(0))
             {
+                gesture = Guid.NewGuid(); gestureSubmitted = false;
                 if (tool == Tool.Eraser)
                 {
-                    history.Begin(Document);
                     erasing = true;
                     lastBrush = world;
                     eraseRadius = plugin.EraserPixels.Value * WorldPerPixel;
-                    EraseTo(world);
+                    EraseTo(world, true);
                 }
                 else
                 {
-                    if (tool == Tool.Pencil) history.Begin(Document);
                     StartStroke(world);
                 }
             }
-            if ((annotations.Count > 0 || plugin.Guides.Count > 0) && Time.unscaledTime >= nextFadeRefresh)
+            if ((plugin.Shared.Annotations.Count > 0 || plugin.Guides.Count > 0) && Time.unscaledTime >= nextFadeRefresh)
             { invalid = true; nextFadeRefresh = Time.unscaledTime + 0.05f; }
             if (activeStroke != null || erasing)
             {
-                if (!ZInput.GetMouseButton(0) || !inside) FinishGesture();
+                if (!ZInput.GetMouseButton(0) || !inside || !plugin.Shared.CanEdit) FinishGesture();
                 else if (erasing) EraseTo(world);
                 else AppendPoint(world);
             }
+            if (activeStroke != null && Time.unscaledTime >= nextStrokeSend) FlushStroke();
             if (viewport.rect.size != lastSize || !Mathf.Approximately(lastProjection, WorldPerPixel)) invalid = true;
             if (invalid) Rebuild();
             UpdateScale();
@@ -211,92 +211,70 @@ namespace Hand_Drawn_Map
             surveyHint += $" / {plugin.SurveyKey.Value}";
 #endif
             status.text = readOnly ? "Chart could not be loaded. Saving and editing are disabled; check the log and restore the .bak file."
-                : notice ?? $"LMB: {tool}   |   Middle drag: pan   |   Wheel: zoom   |   Ctrl+Z: undo ({history.Count})   |   {plugin.MapKey.Value} / Esc: close   |   {surveyHint}";
+                : notice ?? $"LMB: {tool}   |   Middle drag: pan   |   Wheel: zoom   |   Ctrl+Z: undo own edits   |   {plugin.MapKey.Value} / Esc: close   |   {surveyHint}   |   {plugin.Shared.Status}";
         }
 
         private void StartStroke(ChartPoint world)
         {
-            if (tool == Tool.Annotate)
-            {
-                int count = 0;
-                foreach (Annotation annotation in annotations) count += annotation.Stroke.Points.Count;
-                if (annotations.Count >= 256 || count >= 20000)
-                { notice = "Temporary drawing limit reached."; return; }
-                activeStroke = new ChartStroke(plugin.PencilPixels.Value * WorldPerPixel);
-                notice = null;
-                activeStroke.Points.Add(world);
-                activeAnnotation = new Annotation(activeStroke, float.PositiveInfinity, Time.unscaledTime);
-                annotations.Add(activeAnnotation);
-                invalid = true;
-                return;
-            }
-            if (Document.PointCount >= ChartDocument.MaxPoints || Document.Strokes.Count >= ChartDocument.MaxStrokes)
-            { notice = "Drawing limit reached. Erase some ink to continue."; return; }
+            activeTemporary = tool == Tool.Annotate;
             activeStroke = new ChartStroke(plugin.PencilPixels.Value * WorldPerPixel);
             notice = null;
             activeStroke.Points.Add(world);
-            Document.Strokes.Add(activeStroke);
-            Document.PointCount++;
-            Changed();
+            unsentPoints = true;
+            nextStrokeSend = Time.unscaledTime + 0.05f;
+            invalid = true;
         }
 
         private void AppendPoint(ChartPoint world)
         {
             if ((world - activeStroke.Points[activeStroke.Points.Count - 1]).LengthSquared < WorldPerPixel * WorldPerPixel) return;
-            if (activeAnnotation != null)
-            {
-                int count = 0;
-                foreach (Annotation annotation in annotations) count += annotation.Stroke.Points.Count;
-                if (count >= 20000) { FinishGesture(); notice = "Temporary drawing limit reached."; return; }
-                activeStroke.Points.Add(world);
-                invalid = true;
-                return;
-            }
-            if (Document.PointCount >= ChartDocument.MaxPoints) { FinishGesture(); notice = "Drawing limit reached."; return; }
-            if (activeStroke.Points.Count >= ChartDocument.MaxStrokePoints)
-            {
-                ChartPoint previous = activeStroke.Points[activeStroke.Points.Count - 1];
-                activeStroke = null;
-                StartStroke(previous);
-                if (activeStroke == null) return;
-                if (Document.PointCount >= ChartDocument.MaxPoints)
-                { FinishGesture(); notice = "Drawing limit reached."; return; }
-            }
+            if (activeStroke.Points.Count >= SharedMap.MaxChunkPoints) FlushStroke();
+            if (activeStroke == null) return;
             activeStroke.Points.Add(world);
-            Document.PointCount++;
-            Changed();
+            unsentPoints = true;
+            invalid = true;
         }
 
-        private void EraseTo(ChartPoint world)
+        private void EraseTo(ChartPoint world, bool initial = false)
         {
-            if (Document.Erase(lastBrush, world, eraseRadius)) { notice = null; Changed(); }
-            var temporary = new List<Annotation>();
-            bool changed = false;
-            foreach (Annotation annotation in annotations)
-            {
-                var pieces = ChartGeometry.Erase(annotation.Stroke, lastBrush, world, eraseRadius, out bool cut);
-                changed |= cut;
-                foreach (ChartStroke piece in pieces)
-                    temporary.Add(new Annotation(piece, annotation.Expires, annotation.Created));
-            }
-            if (changed && temporary.Count <= 20000)
-            { annotations.Clear(); annotations.AddRange(temporary); invalid = true; }
+            if (!initial && (world - lastBrush).LengthSquared < 0.000001f) return;
+            gestureSubmitted |= plugin.Shared.Erase(gesture, lastBrush, world, eraseRadius);
+            invalid = true;
             lastBrush = world;
+        }
+
+        private void FlushStroke()
+        {
+            nextStrokeSend = Time.unscaledTime + 0.05f;
+            if (activeStroke == null || !unsentPoints) return;
+            ChartPoint last = activeStroke.Points[activeStroke.Points.Count - 1];
+            if (plugin.Shared.Draw(gesture, activeStroke.Points.ToArray(), activeStroke.Width, activeTemporary))
+            {
+                gestureSubmitted = true;
+                activeStroke.Points.Clear(); activeStroke.Points.Add(last);
+            }
+            else
+            {
+                if (!activeTemporary) plugin.Shared.PreserveDraft(gesture, activeStroke.Points.ToArray(), activeStroke.Width);
+                notice = plugin.Shared.Status; activeStroke = null;
+            }
+            unsentPoints = false;
+            invalid = true;
         }
 
         private void FinishGesture()
         {
-            if (activeAnnotation != null)
-            {
-                activeAnnotation.Created = Time.unscaledTime;
-                activeAnnotation.Expires = Time.unscaledTime + plugin.AnnotationLifetime.Value;
-            }
-            activeAnnotation = null;
+            FlushStroke();
+            if (gestureSubmitted && plugin.Shared.CanEdit) plugin.Shared.End(gesture);
+            gestureSubmitted = false;
+            gesture = Guid.Empty;
             activeStroke = null;
+            unsentPoints = false;
             erasing = false;
             panning = false;
-            history.Commit(Document);
+            invalid = true;
         }
+        internal void FinishSharedGesture() => FinishGesture();
         internal void Invalidate() => invalid = true;
         private void Changed() { plugin.Dirty = true; invalid = true; }
 
@@ -326,12 +304,10 @@ namespace Hand_Drawn_Map
             Color ink = new Color(0.18f, 0.15f, 0.12f);
             foreach (ChartStroke stroke in Document.Strokes)
                 RenderStroke(stroke, ink);
-            foreach (Annotation annotation in annotations)
-            {
-                float fade = annotation == activeAnnotation ? 1f : Mathf.Clamp01((annotation.Expires - Time.unscaledTime) /
-                    Mathf.Min(30f, annotation.Expires - annotation.Created));
-                RenderStroke(annotation.Stroke, new Color(0.38f, 0.22f, 0.12f, fade * 0.8f));
-            }
+            foreach (TemporaryInk annotation in plugin.Shared.Annotations)
+                RenderStroke(annotation.Stroke, new Color(0.38f, 0.22f, 0.12f, annotation.Opacity * 0.8f));
+            if (activeStroke != null)
+                RenderStroke(activeStroke, activeTemporary ? new Color(0.38f, 0.22f, 0.12f, 0.8f) : ink);
             foreach (SurveyGuide guide in plugin.Guides)
             {
                 float fade = Mathf.Clamp01((guide.Expires - Time.unscaledTime) / Mathf.Min(30f, guide.Expires - guide.Created));
@@ -395,9 +371,8 @@ namespace Hand_Drawn_Map
 
         private void ClearAnnotations()
         {
-            if (activeAnnotation != null)
-            { activeAnnotation = null; activeStroke = null; }
-            annotations.Clear();
+            FinishGesture();
+            plugin.Shared.ClearAnnotations();
             notice = null;
             invalid = true;
         }
@@ -413,7 +388,7 @@ namespace Hand_Drawn_Map
 
         private void UpdateBrush(Vector2 local, bool inside)
         {
-            brush.gameObject.SetActive(inside && !panning && !readOnly);
+            brush.gameObject.SetActive(inside && !panning && !readOnly && plugin.Shared.CanEdit);
             if (!inside) return;
             float radius = tool == Tool.Eraser
                 ? (erasing ? eraseRadius / WorldPerPixel : plugin.EraserPixels.Value)
@@ -548,13 +523,5 @@ namespace Hand_Drawn_Map
             if (root != null) Object.Destroy(root);
         }
 
-        private sealed class Annotation
-        {
-            public readonly ChartStroke Stroke;
-            public float Expires;
-            public float Created;
-            public Annotation(ChartStroke stroke, float expires, float created)
-            { Stroke = stroke; Expires = expires; Created = created; }
-        }
     }
 }

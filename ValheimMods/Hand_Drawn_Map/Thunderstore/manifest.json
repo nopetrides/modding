@@ -1,8 +1,8 @@
 {
     "name": "HandDrawnMap",
-    "version_number": "0.3.3",
+    "version_number": "0.4.1",
     "website_url": "https://github.com/nopetrides/modding",
-    "description": "WIP hand-drawn cartography for no-map worlds. Pencil, eraser, fading annotations and a craftable Survey Compass. Client-only personal maps, including in multiplayer; shared drawing planned.",
+    "description": "Draw your own map with pencil, eraser, fading notes and a Survey Compass. Use a personal map on any server, or draw together when the host supports it. Works with or without the vanilla map. Work in progress.",
     "dependencies": [
         "denikson-BepInExPack_Valheim-5.4.2350"
     ]

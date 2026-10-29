@@ -20,7 +20,7 @@ if ($ValheimManaged) { $buildArgs += "-p:ValheimManaged=$ValheimManaged" }
 & dotnet @buildArgs
 if ($LASTEXITCODE -ne 0) { throw 'Release build failed.' }
 
-$dllPath = Join-Path $PSScriptRoot 'dist/Hand_Drawn_Map.dll'
+$dllPath = Join-Path $packageDir 'Hand_Drawn_Map.dll'
 $version = [Reflection.AssemblyName]::GetAssemblyName($dllPath).Version.ToString(3)
 if ($version -ne $manifest.version_number) { throw 'DLL and manifest versions differ.' }
 $dllText = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($dllPath))
@@ -37,16 +37,21 @@ try {
     }
 } finally { $icon.Dispose() }
 
-Copy-Item -LiteralPath $dllPath -Destination (Join-Path $packageDir 'Hand_Drawn_Map.dll') -Force
-$files = @('manifest.json', 'README.md', 'CHANGELOG.md', 'icon.png', 'LICENSE', 'Hand_Drawn_Map.dll')
+$files = [ordered]@{
+    'manifest.json' = Join-Path $packageDir 'manifest.json'
+    'README.md' = Join-Path $packageDir 'README.md'
+    'icon.png' = Join-Path $packageDir 'icon.png'
+    'LICENSE' = Join-Path $PSScriptRoot '../../LICENSE'
+    'Hand_Drawn_Map.dll' = $dllPath
+}
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $zipPath = Join-Path $packageDir ("{0}_Thunderstore_{1}.zip" -f $manifest.name, $version.Replace('.', ''))
 $stream = [IO.File]::Open($zipPath, [IO.FileMode]::Create, [IO.FileAccess]::Write)
 $zip = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create)
 try {
-    foreach ($name in $files) {
-        $path = Join-Path $packageDir $name
+    foreach ($name in $files.Keys) {
+        $path = $files[$name]
         if ((Get-Item -LiteralPath $path).Length -eq 0) { throw "Empty package file: $name" }
         [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $path, $name, [IO.Compression.CompressionLevel]::Optimal) | Out-Null
     }
@@ -55,14 +60,14 @@ try {
 $check = [IO.Compression.ZipFile]::OpenRead($zipPath)
 try {
     if ($check.Entries.Count -ne $files.Count) { throw 'Unexpected package entries.' }
-    foreach ($name in $files) {
+    foreach ($name in $files.Keys) {
         $entry = $check.GetEntry($name)
         if ($null -eq $entry -or $entry.Length -eq 0) { throw "Missing package entry: $name" }
         $entryStream = $entry.Open()
         $hash = [Security.Cryptography.SHA256]::Create()
         try { $entryHash = [BitConverter]::ToString($hash.ComputeHash($entryStream)).Replace('-', '') }
         finally { $hash.Dispose(); $entryStream.Dispose() }
-        if ($entryHash -ne (Get-FileHash -LiteralPath (Join-Path $packageDir $name) -Algorithm SHA256).Hash) {
+        if ($entryHash -ne (Get-FileHash -LiteralPath $files[$name] -Algorithm SHA256).Hash) {
             throw "Package content mismatch: $name"
         }
     }

@@ -295,4 +295,6 @@ finally
     foreach (string file in Directory.GetFiles(folder)) File.Delete(file);
     Directory.Delete(folder);
 }
+SharedMapTests.Run(Test);
+MapSessionTests.Run(Test);
 Console.WriteLine($"{passed} checks passed.");

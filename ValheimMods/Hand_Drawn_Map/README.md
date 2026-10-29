@@ -1,83 +1,73 @@
-# Hand Drawn Map — Canvas Test 0.3.3
+# Hand Drawn Map v 0.4.1
 
-Work-in-progress client-only cartography mod. Blank parchment, pencil, partial eraser, temporary annotations, pan/zoom, surveying lines, and a craftable Survey Compass. Your position is hidden by default, with an optional player marker. Functional in multiplayer as a personal map; maps are saved locally and are not directly shareable. Shared drawing is planned.
+Draw the map by hand. A blank parchment with a pencil, eraser, fading annotations and a craftable Survey Compass. Coastlines, landmarks and paths appear only where they are drawn. The player marker is disabled by default.
 
-## Install
+Intended for no-map adventures, but also works in worlds with the vanilla map enabled. **Rebind the Hand Drawn Map open key in those worlds: the vanilla map key takes priority when both use the same key.**
 
-Requires a working BepInExPack Valheim installation compatible with your game, as used by CropUtils. Copy `dist/Hand_Drawn_Map.dll` into your **client's** `BepInEx/plugins/HandDrawnMap/` folder and launch the game. No Jotunn dependency. Works with the world's no-map setting enabled.
+**Work in progress.** Play solo or draw together on one shared map in multiplayer. Anyone can add or erase ink, and personal drawing appears immediately. No cartography table required. Feedback and suggestions welcome.
 
-## Controls
+## Installation
 
-| Control | Action |
-| --- | --- |
-| M | Open/close canvas; configurable |
-| Escape / Close button | Close canvas |
-| Pencil / Eraser / Annotate buttons | Select drawing tool |
-| Clear: Guides | Remove all current survey lines |
-| Clear: Annotations | Remove all temporary annotation strokes |
-| Left mouse drag | Draw or erase part of a line |
-| Middle mouse drag | Pan |
-| Mouse wheel | Zoom |
-| Ctrl+Z | Undo the latest permanent drawing or erase gesture |
-| Right-click, with Survey Compass equipped | Record a temporary survey line |
+Requires [BepInEx](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). Install through a mod manager, or place `Hand_Drawn_Map.dll` in `BepInEx/plugins`.
 
-Survey lines extend across the canvas in both directions, without marking where you stood. Take two readings while rotating in the same spot to locate yourself, or sight a distant feature from different positions to triangulate it. Lines fade and expire after two minutes by default. Capture bearings with the canvas closed so you can aim normally.
+For shared drawing, install the same mod version on the host or server and on each participating player's game. Supports worlds hosted by a player and dedicated servers. The host or server saves the shared map. Players can also use personal maps without joining shared drawing.
 
-The separate Clear section removes temporary marks immediately. Clearing guides or annotations leaves permanent ink, the other temporary mark type, and the undo history intact.
+## Tools and controls
+
+- M: Open or close the map. Configurable.
+- Escape: Close the map.
+- Left mouse: Draw or erase with the selected tool.
+- Middle mouse drag: Pan the map.
+- Mouse wheel: Zoom.
+- Ctrl+Z: Undo your own drawing or erasing, one action at a time.
+
+Pencil draws permanent ink. Eraser removes ink, including other players' drawings. Annotate draws temporary ink that fades away. Annotations are shared with everyone; survey guides are visible only to the player who creates them.
+
+Under Clear, Guides removes your survey lines and Annotations removes everyone's temporary drawings. Resync downloads a fresh copy of the shared map if drawings appear out of sync.
 
 ## Survey Compass
 
-Craft one at a level 1 workbench using **4 fine wood, 1 bronze nail, and 12 coal**. Discover the ingredients to learn the recipe normally. Equip it in hand from your inventory or hotbar, aim with the map closed, and right-click. It records a temporary local guide and displays: "You sketch a guide line across your map." Attacks and blocking are suppressed only while this tool is in your right hand. It has no durability or charges.
+Craft at a level 1 workbench:
 
-The item uses a separate prefab, `NPR_SurveyCompass`, with its own equipment data and recipe. It reuses the icon and copies mesh/material visuals from `Catapult_Ammo_BloodGold`; the held visual is scaled to hand size and contains no payload scripts or physics. If that payload prefab is unavailable, it uses a tankard visual and logs the fallback. The original ammunition and its recipe remain unmodified. Registration uses the game's database/prefab lifecycle and requires no additional library.
+- Fine wood x 4
+- Bronze nail x 1
+- Coal x 12
 
-For developer testing: `spawn NPR_SurveyCompass 1`. The compass is currently intended for local testing; shared-map multiplayer functionality remains deferred.
+Equip in hand, look towards a point of interest and right click with the map closed. A temporary guide line is drawn across the map in both directions. The compass is not consumed.
 
-The canvas uses the installed vanilla map's world extent, zoom range, and wheel-step formula. It matches its vertical world-to-screen scale at a given zoom. Drawings and line widths stay anchored to world coordinates as you pan and zoom. The initial view is centered on world origin; reopening keeps your view rather than centering on your character.
+Take two readings from the same position while turning to find your position where the lines cross. To locate a distant landmark, sight it from two different positions and mark where those lines cross.
 
-The panel follows the vanilla map rectangle, including its screen-edge margins on ultrawide displays, leaving the surrounding world visible. Its canvas is raised above existing UI canvases when opened. A scale bar under the buttons changes length with zoom and selects readable 1/2/5 metric increments in meters or kilometers. A translucent circle shows the current brush footprint.
+## Personal maps
 
-Annotate draws temporary ink that fades and expires like survey guides. Its lifetime starts when the stroke finishes. Annotations remain across closing/reopening the canvas until they expire, but are not saved to disk. The eraser can remove both permanent ink and annotations.
+If the host has no compatible shared map, a personal map opens after a 10-second connection attempt. This does not disconnect the player from the game.
 
-Undo groups an entire mouse gesture, including long strokes and multi-frame erasing, into one action. It restores only that action's permanent strokes after checking their geometry has not changed. It preserves the current pan/zoom and unrelated ink. Temporary marks never enter the undo history; undoing an erase does not bring erased annotations back. History retains up to 50 actions within a one-million-point history budget, survives closing the canvas, and resets on leaving the world or restarting. There is no redo in this version.
+Set `PersonalMapOnly = true` under `[Map]` in the config file to use a personal map immediately, without trying to connect to the host's map. Disabled by default. A host using this setting also keeps their map personal.
 
-## Configuration and saves
+Personal drawings save separately for each character and world. They are not sent to other players or merged into shared maps. Resync reloads the personal map while in this mode.
 
-First launch creates `BepInEx/config/com.nopetrides.valheim.hand-drawn-map.cfg`:
+## Settings
 
-- `Controls.OpenMap`: default `M`.
-- `Drawing.SurveyLifetimeSeconds`: default `120`.
-- `Drawing.PencilWidthPixels`: default `2.5`, converted to world width when drawing starts.
-- `Drawing.EraserRadiusPixels`: default `14`, converted to world radius when erasing starts.
-- `Drawing.AnnotationLifetimeSeconds`: default `120` after finishing a temporary stroke.
-- `Drawing.BrushIndicatorOpacity`: default `0.2` (20% fill opacity).
-- `Map.ShowMyLocation`: default `false`. Set to `true` to show the vanilla player-marker sprite at your current position.
+Change the map key, brush sizes, brush indicator opacity and how long temporary marks last. Show my location can be enabled for a player marker. The host or server sets how long shared annotations last.
 
-The optional location marker refreshes just before each canvas render, including when you move on a boat while the map stays open. It uses the vanilla marker's sprite, tint, size, and camera-heading rule, projected through the drawing canvas's current pan/zoom. It hides outside the visible parchment and does not recenter the map, draw a trail, or add saved ink. Changes through a live configuration manager take effect immediately.
+See `BepInEx/config/com.nopetrides.valheim.hand-drawn-map.cfg` after first launch.
 
-Keyboard shortcuts support modifiers. Rebind the keys if another mod uses them. Mouse input is required for editing in this phase.
+## Notes
 
-Ink and view state save locally per world UID and character ID under `BepInEx/config/com.nopetrides.valheim.hand-drawn-map/`. Closing the canvas saves changes; idle autosave runs every five seconds. Replaced files retain a `.bak` copy. Guides are temporary and do not survive leaving the world. A corrupt chart opens read-only and logs an error; restore its `.bak` while the game is closed.
+- Drawing requires mouse input.
+- Undo covers your latest 50 drawing or erasing actions during the current session. Temporary marks cannot be undone.
+- Annotations disappear when the host or server restarts.
+- Existing personal drawings are kept. The first time an older world is hosted, the host character's drawing becomes the starting shared map.
+- Back up the host or server's `BepInEx/config/com.nopetrides.valheim.hand-drawn-map/shared` folder alongside the world to keep its drawings.
+- Compatibility with other mods is not guaranteed.
 
-Limits: 200,000 stored points, 20,000 permanent stroke fragments, 20,000 points in new temporary drawings, and 32 simultaneous guides. Existing 0.1.x chart files remain compatible. There is no multiplayer synchronization in this phase. Competing map-window mods have not been compatibility-tested. This prototype does not alter vanilla exploration data or prevent other mods from showing their maps.
+# Changelog:
 
-## Build and checks
+0.4.1
 
-Builds against the installed game's original assemblies. No publicized copies are required. Hotkeys use Unity input, as in CropUtils, with public player-state and UI checks.
+Added shared maps for multiplayer. The host or server owns and saves the map, and players can draw and erase together with their own drawing appearing immediately. Supports player-hosted worlds and dedicated servers. Install the same mod version on the host or server and each player joining the shared map. Survey guides remain personal.
 
-```powershell
-dotnet build ValheimMods/Hand_Drawn_Map/Hand_Drawn_Map.csproj -c Release
-dotnet run --project ValheimMods/Hand_Drawn_Map/Tests/CanvasTests.csproj -c Release
-```
+Added optional `PersonalMapOnly`, disabled by default, to keep a self-owned map without connecting to shared drawing. Personal maps save separately for each character and world. If the host has no compatible shared map, the mod falls back to a personal map automatically.
 
-Override the game location with `-p:ValheimDir=...` or the managed folder with `-p:ValheimManaged=...`. The build copies the plugin to `dist/Hand_Drawn_Map.dll`.
+0.3.3
 
-Run `./ValheimMods/Hand_Drawn_Map/BuildPackage.ps1` to build and validate the Thunderstore ZIP. Its concise public README and manifest are in `Thunderstore/`. The debug survey hotkey, its configuration entry, and its UI hint are compiled only in Debug builds. Release surveying requires the equipped compass.
-
-The automated checks cover transforms, swept partial erasing, metric scaling, gesture undo, conflicts, history bounds, and persistence/recovery rejection. The 0.1.1 input path was confirmed in-game. The Survey Compass still needs an in-game check for recipe discovery, equipment appearance, right-click guides, drop/pickup, and character reload. Verify that regular Bloodgold Payload remains a non-equippable material.
-
-Equipment implementation references: [Jotunn's item cloning tutorial](https://valheim-modding.github.io/Jotunn/tutorials/items.html) and [generated item list](https://valheim-modding.github.io/Jotunn/data/objects/item-list.html). The actual attachment, equipability, database registration, and control hooks were checked against the installed game assemblies; this mod does not depend on Jotunn.
-
-## Later multiplayer direction
-
-The server will own the permanent map and distribute changes. Connected players edit the same map concurrently. Survey lines remain local reference guides. Undo should identify a player's own edits and avoid overwriting subsequent changes by other players. This requires server-issued operation/stroke identities and conflict checks; the current local history is not a multiplayer protocol.
+Initial work-in-progress release. Personal hand-drawn maps with pencil, eraser, fading annotations, survey guides and undo. Includes the craftable Survey Compass, distance scale and optional player marker.

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>Hand_Drawn_Map</AssemblyName>
-    <Version>0.3.3</Version>
+    <Version>0.4.1</Version>
     <Description>Local hand-drawn cartography canvas for Valheim.</Description>
     <LangVersion>latest</LangVersion>
     <ValheimDir Condition="'$(ValheimDir)' == ''">J:\SteamGames\steamapps\common\Valheim</ValheimDir>
@@ -38,7 +38,7 @@
     <Error Condition="!Exists('$(ValheimManaged)\assembly_valheim.dll')" Text="Set ValheimManaged to the installed Valheim Managed folder." />
   </Target>
   <Target Name="CopyPlugin" AfterTargets="Build">
-    <MakeDir Directories="$(MSBuildProjectDirectory)\dist" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildProjectDirectory)\dist" />
+    <MakeDir Directories="$(MSBuildProjectDirectory)\Thunderstore" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildProjectDirectory)\Thunderstore" />
   </Target>
 </Project>

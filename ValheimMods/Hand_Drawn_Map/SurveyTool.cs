@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Object = UnityEngine.Object;
 
 namespace Hand_Drawn_Map
@@ -14,6 +15,7 @@ namespace Hand_Drawn_Map
         private static GameObject prefab;
         private static Recipe recipe;
         private static readonly FieldInfo RightItem = AccessTools.Field(typeof(Humanoid), "m_rightItem");
+        private static readonly FieldInfo NamedPrefabs = AccessTools.Field(typeof(ZNetScene), "m_namedPrefabs");
 
         internal static bool IsEquipped(Player player)
         {
@@ -38,6 +40,7 @@ namespace Hand_Drawn_Map
                 }
                 db.m_items.Add(prefab);
             }
+            if (prefab != null && ZNetScene.instance != null) RegisterNetwork(ZNetScene.instance, true);
             if (db.m_recipes.Exists(entry => entry != null && entry.name == "Recipe_" + PrefabName)) return;
             ItemDrop wood = FindItem(db, "FineWood")?.GetComponent<ItemDrop>();
             ItemDrop nail = FindItem(db, "BronzeNails")?.GetComponent<ItemDrop>();
@@ -89,7 +92,7 @@ namespace Hand_Drawn_Map
                     m_dlc = "",
                     m_itemType = ItemDrop.ItemData.ItemType.Tool,
                     m_animationState = ItemDrop.ItemData.AnimationState.OneHanded,
-                    m_icons = (Sprite[])sourceDrop.m_itemData.m_shared.m_icons.Clone(),
+                    m_icons = sourceDrop.m_itemData.m_shared.m_icons != null ? (Sprite[])sourceDrop.m_itemData.m_shared.m_icons.Clone() : Array.Empty<Sprite>(),
                     m_maxStackSize = 1,
                     m_maxQuality = 1,
                     m_weight = 0.5f,
@@ -105,6 +108,8 @@ namespace Hand_Drawn_Map
                 drop.m_itemData.m_quality = 1;
                 drop.m_itemData.m_variant = 0;
                 drop.m_itemData.m_dropPrefab = clone;
+                if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null)
+                { clone.SetActive(true); return clone; }
                 Transform originalAttach = clone.transform.Find("attach");
                 if (originalAttach != null) originalAttach.name = "drop_visual";
                 Transform attach = new GameObject("attach").transform;
@@ -187,12 +192,23 @@ namespace Hand_Drawn_Map
         [HarmonyPatch(typeof(ZNetScene), "Awake")]
         private static class NetworkRegistration
         {
-            private static void Prefix(ZNetScene __instance)
+            private static void Prefix(ZNetScene __instance) => RegisterNetwork(__instance, false);
+            private static void Postfix(ZNetScene __instance) => RegisterNetwork(__instance, true);
+        }
+
+        private static void RegisterNetwork(ZNetScene scene, bool initialized)
+        {
+            if (prefab == null) return;
+            if (!scene.m_prefabs.Exists(item => item != null && item.name == PrefabName)
+                && !scene.m_nonNetViewPrefabs.Exists(item => item != null && item.name == PrefabName))
             {
-                if (prefab == null || __instance.m_prefabs.Exists(item => item != null && item.name == PrefabName)
-                    || __instance.m_nonNetViewPrefabs.Exists(item => item != null && item.name == PrefabName)) return;
-                if (prefab.GetComponent<ZNetView>() != null) __instance.m_prefabs.Add(prefab);
-                else __instance.m_nonNetViewPrefabs.Add(prefab);
+                if (prefab.GetComponent<ZNetView>() != null) scene.m_prefabs.Add(prefab);
+                else scene.m_nonNetViewPrefabs.Add(prefab);
+            }
+            if (initialized)
+            {
+                var names = (System.Collections.Generic.Dictionary<int, GameObject>)NamedPrefabs.GetValue(scene);
+                names[PrefabName.GetStableHashCode()] = prefab;
             }
         }
 
